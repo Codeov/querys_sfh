@@ -1,0 +1,6 @@
+----------------------------------Configuración Azure-----------------
+1.Install-Module -Name Az -AllowClobber -Scope CurrentUser
+2.Uninstall-AzureRM
+3.Connect-AzAccount
+4.Set-ExecutionPolicy remotesigned
+5.Install-module SqlServer -Force -Allowclobber

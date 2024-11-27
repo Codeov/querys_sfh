@@ -1,0 +1,10 @@
+--create table `sistemas-bi.SPSA.tmp_int_fact_ticket_detalle_escaneado`
+(
+fecha	DATE,			
+Codigo_Local	STRING,			
+numero_Terminal	STRING,			
+numero_Transaccion	STRING,			
+codigo_producto	STRING,			
+flag_ingreso	STRING	
+)
+partition by fecha

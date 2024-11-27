@@ -1,0 +1,35 @@
+
+select b.codigo_promocion,case when c.formato like '%LA%VE%' then 'PLAZA VEA' else c.formato end formato,
+sum(a.monto_dscto_gasto_financiero) monto_dscto_gasto_financiero,
+sum(a.monto_dscto_margen_ticket) monto_dscto_margen_ticket,
+sum(a.monto_dscto_margen_producto) monto_dscto_margen_producto,
+sum(a.monto_dscto_gasto_marketing) monto_dscto_gasto_marketing
+ from `SPSA.int_fact_promocion` a
+right join `sistemas-bi.Tacho.tmp_promocion` b
+on lpad(a.codigo_promocion,10,"0")=b.codigo_promocion
+inner join `SPSA.dim_local` c
+on a.codigo_local=c.codigo_local
+where a.fecha between '2024-05-01' and '2024-05-31'
+and a.codigo_local in ('SO03','SO04','SO02','SO05')
+group by b.codigo_promocion,c.formato
+union all
+select b.codigo_promocion,'ORIENTE' formato,
+sum(a.monto_dscto_gasto_financiero) monto_dscto_gasto_financiero,
+sum(a.monto_dscto_margen_ticket) monto_dscto_margen_ticket,
+sum(a.monto_dscto_margen_producto) monto_dscto_margen_producto,
+sum(a.monto_dscto_gasto_marketing) monto_dscto_gasto_marketing
+from `SPSA.int_fact_promocion` a
+right join `sistemas-bi.Tacho.tmp_promocion` b
+on lpad(a.codigo_promocion,10,"0")=b.codigo_promocion
+inner join `SPSA.dim_local` c
+on a.codigo_local=c.codigo_local
+where a.fecha between '2024-05-01' and '2024-05-31'
+and a.codigo_local not in ('SO03','SO04','SO02','SO05')
+group by b.codigo_promocion
+;
+
+
+--select a.* from `sistemas-bi.Tacho.tmp_promocion` a;
+
+--select a.* from `SPSA.dim_local` a
+--where a.codigo_local like '%O%';

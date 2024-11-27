@@ -1,0 +1,24 @@
+necesita información de notas de credito 
+
+Fecha|Formato|Codigo_Local|Nombre_Local|Jerarquia_Producto|SKU|Nombre_Producto|Importe
+
+select a.fecha,b.formato,b.codigo_local,b.nombre,
+c.nombre_division,c.nombre_area,c.nombre_seccion,
+c.nombre_linea ,c.nombre_familia,c.nombre_subFamilia,
+c.codigo_producto sku,c.nombre_producto,
+ sum(a.venta_bruta) venta_bruta, sum(a.venta_bruta) venta_neta  from `sistemas-bi.SPSA.ticket_venta` a
+inner join `sistemas-bi.SPSA.dim_local` b
+on a.codigo_local=b.codigo_local
+inner join `sistemas-bi.SPSA.dim_producto` c
+on a.codigo_producto=c.codigo_producto
+where 
+a.fecha between '2022-01-01' and '2022-11-13'
+--and b.codigo_alterno = '195'
+and a.codigo_tipo_doc_trx = 'NCR'
+group by a.fecha,b.formato,b.codigo_local,b.nombre,
+c.nombre_division,c.nombre_area,c.nombre_seccion,nombre_linea,
+c.nombre_familia,c.nombre_subFamilia
+,c.codigo_producto,c.nombre_producto order by 1,2;
+
+--Fecha|Formato|Codigo_Local|Nombre_Local|Jerarquia_Producto|SKU|Nombre_Producto|Importe
+

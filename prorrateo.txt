@@ -1,0 +1,58 @@
+SELECT 
+ b.Hed_fcontable,
+ sum(b.hed_brutopos + b.hed_brutoneg) Venta_Bruta ,
+ sum(b.hed_brutopos + b.hed_brutoneg - nvl(b.hed_impuesto,0)- nvl(b.hed_impuesto_isc,0)) Venta_Neta
+  FROM ctx_header_trx_chequeo a
+  inner join ctx_header_trx b
+  on a.hed_pais = b.hed_pais and a.hed_origentrx=b.hed_origentrx and 
+  a.hed_local = b.hed_local and a.hed_pos=b.hed_pos and a.hed_numtrx=b.hed_numtrx 
+  and a.hed_fechatrx=b.hed_fechatrx and a.hed_horatrx = b.hed_horatrx
+ WHERE a.hed_fcontable = '04-07-2023'
+ and b.hed_tipotrx='PVT'
+ and b.hed_tipodoc in ('TFC','BLT','NCR')
+ and b.hed_anulado='N'
+ and chq_f_prordescto in (11111111111111,-1)
+ group by b.Hed_fcontable;
+
+/////////////////////////////
+
+
+SELECT 
+ b.Hed_fcontable,
+ b.hed_local,
+ b.hed_pos,
+ b.hed_numtrx,
+ chq_f_prordescto,
+ sum(b.hed_brutopos + b.hed_brutoneg) Venta_Bruta ,
+ sum(b.hed_brutopos + b.hed_brutoneg - nvl(b.hed_impuesto,0)- nvl(b.hed_impuesto_isc,0)) Venta_Neta
+  FROM ctx_header_trx_chequeo a
+  inner join ctx_header_trx b
+  on a.hed_pais = b.hed_pais and a.hed_origentrx=b.hed_origentrx and 
+  a.hed_local = b.hed_local and a.hed_pos=b.hed_pos and a.hed_numtrx=b.hed_numtrx 
+  and a.hed_fechatrx=b.hed_fechatrx and a.hed_horatrx = b.hed_horatrx
+ WHERE a.hed_fcontable between '01-03-2024' and '26-03-2024'
+ and b.hed_tipotrx='PVT'
+ and b.hed_tipodoc in ('TFC','BLT','NCR')
+ and b.hed_anulado='N'
+ and 
+ (
+ chq_f_prordescto in (11111111111111,-1) --or CHQ_F_PRORRATEO=0
+ )
+ and b.hed_local < 5000
+ group by
+  b.Hed_fcontable,
+ b.hed_local,
+ b.hed_pos,
+ b.hed_numtrx,
+ chq_f_prordescto;
+
+select a.* from ctx_header_trx_chequeo a 
+ where a.hed_fcontable='02-03-2024'
+ and a.hed_local=475
+ and a.hed_pos=2
+ and a.hed_numtrx=1886;
+ 
+
+
+--2023-11-03/P231/14/1533--BA83-01484039
+----2023--05-07/66/3/1658 --BA06-01492512

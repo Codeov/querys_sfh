@@ -1,0 +1,4 @@
+select * from ctx_dsctos_prod_trx a
+where a.dpr_fcontable = '12-01-2023'
+      and a.hed_local=195 
+      and a.hed_pos=25  and a.hed_numtrx=7511;

@@ -1,0 +1,31 @@
+SELECT a.codigo_tipo_venta,sum(a.presupuesto_venta) presupuesto_venta FROM `sistemas-bi.SPSA.fact_presupuesto` a
+where 
+a.fecha between '2023-02-01' and '2023-02-28'
+and a.codigo_tipo_venta in (1,4)
+group by a.codigo_tipo_venta order by 1;
+
+SELECT a.fecha,sum(a.presupuesto_venta) presupuesto_venta FROM `sistemas-bi.SPSA.fact_presupuesto` a
+where 
+a.fecha between '2023-02-01' and '2023-02-28'
+and a.codigo_tipo_venta in (1)
+group by a.fecha order by 1;
+
+
+--Venta POS	1	 842,975,982.21 
+--Venta Ecommerce	4	 28,946,849.41 
+
+SELECT a.id_tipo_venta,sum(a.venta_ppto) venta_ppto FROM `spsa-sistemasbi-powerbi.BI_Powerbi.fact_presupuesto` a
+where 
+a.fecha between '2023-02-01' and '2023-02-28'
+and a.id_tipo_venta in (1,4)
+group by a.id_tipo_venta order by 1;
+
+
+SELECT a.fecha,sum(a.venta_ppto) venta_ppto FROM `spsa-sistemasbi-powerbi.BI_Powerbi.fact_presupuesto` a
+where 
+a.fecha between '2023-02-01' and '2023-02-28'
+and a.id_tipo_venta = 1
+group by a.fecha order by 1;
+
+--Venta POS	1	 842,975,982.21 
+--Venta Ecommerce	4	 28,946,849.41 

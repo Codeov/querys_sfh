@@ -1,0 +1,31 @@
+
+
+DECLARE @oldName NVARCHAR(255);
+DECLARE @newName NVARCHAR(255);
+DECLARE @sql NVARCHAR(MAX);
+
+-- Cursor para recorrer todos los procedimientos almacenados
+DECLARE sp_cursor CURSOR FOR
+select distinct a.sp name from zz_list_sp_depurar a 
+
+OPEN sp_cursor;
+FETCH NEXT FROM sp_cursor INTO @oldName;
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    -- Generar el nuevo nombre
+    SET @newName = 'zz_' + @oldName;
+
+    -- Construir el comando de renombre
+    SET @sql = 'EXEC sp_rename ''' + @oldName + ''', ''' + @newName + ''', ''OBJECT'';';
+    
+    -- Ejecutar el comando
+    EXEC sp_executesql @sql;
+
+    -- Obtener el siguiente procedimiento
+    FETCH NEXT FROM sp_cursor INTO @oldName;
+END;
+
+-- Cerrar el cursor
+CLOSE sp_cursor;
+DEALLOCATE sp_cursor;

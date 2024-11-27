@@ -1,0 +1,58 @@
+
+DECLARE @tableName NVARCHAR(255)
+DECLARE @sql NVARCHAR(MAX)
+
+DECLARE table_cursor CURSOR FOR
+SELECT t.name
+FROM sys.tables t
+LEFT JOIN sys.dm_db_index_usage_stats s
+  ON t.object_id = s.object_id
+WHERE s.object_id IS NULL
+  OR (s.user_seeks = 0 AND s.user_scans = 0 AND s.user_lookups = 0 AND s.user_updates = 0)
+
+OPEN table_cursor
+FETCH NEXT FROM table_cursor INTO @tableName
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    SET @sql = 'EXEC sp_rename ''' + @tableName + ''', ''zz_' + @tableName + ''''
+    EXEC sp_executesql @sql
+
+    FETCH NEXT FROM table_cursor INTO @tableName
+END
+
+CLOSE table_cursor
+DEALLOCATE table_cursor
+
+///////////////////////recuperar
+
+-- Crea una tabla temporal para almacenar los nombres de las tablas a renombrar
+CREATE TABLE #TablesToRename (
+    OldName NVARCHAR(128),
+    NewName NVARCHAR(128)
+);
+
+-- Inserta los nombres de las tablas que comienzan con el prefijo zz_ en la tabla temporal
+INSERT INTO #TablesToRename (OldName, NewName)
+SELECT 
+    t.name AS OldName,
+    rtrim(ltrim(SUBSTRING(t.name, 4, LEN(t.name) - 3))) AS NewName
+FROM sys.tables t
+LEFT JOIN sys.dm_db_index_usage_stats s
+  ON t.object_id = s.object_id
+WHERE --s.object_id IS NULL
+  --OR (s.user_seeks = 0 AND s.user_scans = 0 AND s.user_lookups = 0 AND s.user_updates = 0)
+  --AND t.name LIKE 'zz_%'
+    t.name in ('zz_Validacion_26','zz_tmp_ph_pollos_var_all');
+
+-- Genera los comandos para renombrar las tablas
+DECLARE @sql NVARCHAR(MAX) = N'';
+
+SELECT @sql += 'EXEC sp_rename ''' + OldName + ''', ''' + NewName + ''';' + CHAR(13)
+FROM #TablesToRename;
+
+-- Ejecuta los comandos generados
+EXEC sp_executesql @sql;
+
+-- Limpia la tabla temporal
+DROP TABLE #TablesToRename;

@@ -1,0 +1,8 @@
+select b.formato, count(distinct(a.id_ticket)) venta from `sistemas-bi.SPSA.ticket_venta` a
+inner join `sistemas-bi.SPSA.dim_local` b
+on a.codigo_local=b.codigo_local
+where 
+a.fecha between '2022-09-01' and '2022-09-30'
+and a.codigo_tipo_doc_trx = 'NCR'
+and b.formato in ('MASS','PLAZA VEA','PLAZA VEA SUPER','PLAZA VEA EXPRESS','CASH & CARRY')
+group by b.formato;

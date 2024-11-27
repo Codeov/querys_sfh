@@ -1,0 +1,59 @@
+SELECT
+distinct
+cast(current_date() as date) fecha,
+'264' codigo_local,
+'E-Commerce Online' Nombre,
+ifnull(a.Subcategory1,'') subcategory1,
+ifnull(a.Subcategory2,'') subcategory2,
+ifnull(a.Subcategory3,'') subcategory3,
+a.Brand nombre_marca,
+a.ReferenceId sku,
+a.ProductName nombre_producto,
+a.UM unidades,
+a.RegularPrice precio_regular,
+a.OnlinePrice precio_online,
+a.TohPrice precio_toh
+FROM `spsa-marketing-sfmc.dst_stage_puc.t_vtex_catalog` a
+where a.Seller='Plaza Vea';
+
+//////////
+create or replace table `sistemas-bi.Tacho.precios_plazavea`
+partition by fecha 
+as
+select distinct
+a.fecha,a.codigo_local,a.nombre,a.subcategory1,a.subcategory2,a.subcategory3,
+a.nombre_marca,a.sku,a.nombre_producto,a.unidades,a.precio_regular,
+a.precio_online,a.precio_toh
+from
+(
+SELECT
+distinct
+cast(current_date() as date) fecha,
+'264' codigo_local,
+'E-Commerce Online' Nombre,
+ifnull(a.Subcategory1,'') subcategory1,
+ifnull(a.Subcategory2,'') subcategory2,
+ifnull(a.Subcategory3,'') subcategory3,
+a.Brand nombre_marca,
+a.ReferenceId sku,
+a.ProductName nombre_producto,
+a.UM unidades,
+a.RegularPrice precio_regular,
+a.OnlinePrice precio_online,
+a.TohPrice precio_toh
+FROM `spsa-marketing-sfmc.dst_stage_puc.t_vtex_catalog` a
+where a.Seller='Plaza Vea'
+) a
+inner join 
+(
+  select a.fecha,a.codigo_local,a.Codigo_Producto,a.Estado_Cia_PMM,a.estado_local_pmm ,a.surtido
+    from  `spsa-bi-tablones.SPSA_Tablon.tablon_surtido_comercial` a
+    where a.fecha =current_date("America/Bogota") -1
+    and a.codigo_local= 'P264'
+    and a.Estado_Catalogado = 'Catalogado'
+    and a.Estado_Cia_PMM = 'Activo'
+) b
+on lpad(a.sku,11,"0")=b.codigo_producto;
+
+
+https://stackoverflow.com/questions/43145902/bigquery-convert-accented-characters-to-their-plain-ascii-equivalents

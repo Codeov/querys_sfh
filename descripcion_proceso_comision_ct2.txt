@@ -1,0 +1,10 @@
+carga comisiones : 
+
+antes del calculo de la comision se valida que el local y vendedor se encuentren activos 
+
+tipo de comisiones: 
+por margen = datos de costo medio 
+             se tomará en consideración solo aquellos productos que registrados dentro del grupo comisionables 
+según una tabla de producto por grupo COM_GRUPO_MARGEN donde según la categoría del grupo y el margen obtenido de 
+la venta (por ello el dato el costo medio) el vendedor recibirá un factor de comisión que se tomará para el cálculo de su comisión3
+por venta

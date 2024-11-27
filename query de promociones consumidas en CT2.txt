@@ -1,0 +1,29 @@
+SELECT to_char(h.hed_fcontable,'YYYY-MM-DD') AS Fecha_Proceso
+        , l.loc_numerosap AS Codigo_Local
+         ,h.hed_pos AS Numero_Terminal
+         ,h.hed_numtrx AS Numero_Tansaccion
+         ,d.ptr_corrprod AS Correlativo
+         ,d.dpr_coddcto AS Codigo_Promocion
+         ,d.dpr_nomdcto nombre_descuento
+        , d.dpr_monto2 AS Monto_Dscto_Margen_Ticket
+         ,d.dpr_monto1f AS Monto_Dscto_Margen_Producto
+        , d.dpr_monto3 AS Monto_Dscto_Gasto_Financiero
+        , d.dpr_monto4 AS Monto_Dscto_Gasto_Marketing
+        , d.dpr_monto5 AS Monto_Dscto_Gasto_Agora
+        , d.PTR_CODPROD AS Codigo_EAN
+        , d.dpr_cantidad AS Cantidad_Descuento
+         FROM ctx_header_trx  h
+         ,irs_locales l
+         ,ctx_dsctos_prod_trx d
+    WHERE l.loc_numero = h.hed_local
+      AND h.hed_pais = d.hed_pais
+      AND h.hed_origentrx = d.hed_origentrx
+      AND h.hed_local = d.hed_local
+      AND h.hed_pos = d.hed_pos
+      AND h.hed_numtrx = d.hed_numtrx
+      AND h.hed_fechatrx = d.hed_fechatrx
+      AND h.hed_horatrx = d.hed_horatrx
+      AND h.hed_tipotrx = 'PVT'
+      AND h.hed_tipodoc IN ('BLT','TFC','NCR')
+      AND h.hed_fcontable = to_date(20231119,'yyyymmdd') and h.hed_local=195 and h.hed_pos= 18 and h.hed_numtrx=7399
+ ;

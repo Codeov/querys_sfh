@@ -1,0 +1,54 @@
+ 
+select a.*,(b.venta_bruta/b.venta_unidad) precio_venta from (
+ select z.fecha,z.formato,z.nombre, z.codigo_local,z.codigo_producto,(z.costo_unitario/(1-z.feed)) costo_unitario_pmm
+ from( 
+select f.*,e.fee_factor feed  from (
+      select k.*,l.formato,l.nombre from 
+      (
+                  select a.fecha,a.codigo_local,a.codigo_producto,a.costo costo_unitario
+                  from (
+                        SELECT a.fecha,a.codigo_local,a.codigo_producto,a.costo FROM `sistemas-bi.SPSA.fact_costo` a
+                        WHERE a.fecha between '2023-04-01' and '2023-04-25'  --and a.codigo_local='P195'
+                        ) a
+                  ) k 
+      inner join `sistemas-bi.SPSA.dim_local` l
+      on k.codigo_local=l.codigo_local
+                 ) f
+inner join `sistemas-bi.SPSA_STAGE.tmp_costo_fee_factor` e 
+on ltrim(rtrim(f.formato))=ltrim(rtrim(e.id_formato)) and e.codigo_local is null 
+) z
+where  z.codigo_local not like 'S%'
+union all
+select z.fecha,z.formato,z.nombre,z.codigo_local,z.codigo_producto,(z.costo_unitario/(1-z.feed)) costo_unitario_pmm
+ from( 
+select f.*,e.fee_factor feed  from (
+      select k.*,l.formato,l.nombre from (
+                  select a.fecha,a.codigo_local,a.codigo_producto,a.costo costo_unitario
+                  from (
+                        SELECT a.fecha,a.codigo_local,a.codigo_producto,a.costo FROM `sistemas-bi.SPSA.fact_costo` a
+                        WHERE a.fecha between '2023-04-01' and '2023-04-25'  --and a.codigo_local='P195'
+                        ) a
+            ) k 
+      inner join `sistemas-bi.SPSA.dim_local` l
+      on k.codigo_local=l.codigo_local and l.formato='PLAZA VEA'
+                 ) f
+inner join `sistemas-bi.SPSA_STAGE.tmp_costo_fee_factor` e 
+on ltrim(rtrim(f.formato))=ltrim(rtrim(e.id_formato)) and f.codigo_local=e.codigo_local and e.fee_factor is not null) z
+) a
+inner join 
+(
+      select fecha,codigo_local,codigo_producto,venta_bruta,venta_unidad  
+      from (
+      select row_number() over ( partition by fecha,codigo_local,codigo_producto order by fecha,codigo_local,codigo_producto) flag 
+      ,fecha,codigo_local,codigo_producto,venta_bruta,venta_unidad 
+      from `sistemas-bi.SPSA.ticket_venta`
+      where fecha between '2023-04-01' and '2023-04-25'  --and a.codigo_local='P195'
+      and venta_unidad <> 0 and venta_bruta <> 0
+      )
+      where flag=1
+ ) b
+on a.fecha=b.fecha and a.codigo_local=b.codigo_local and a.codigo_producto=b.codigo_producto
+where a.costo_unitario_pmm > (b.venta_bruta/b.venta_unidad);
+
+
+

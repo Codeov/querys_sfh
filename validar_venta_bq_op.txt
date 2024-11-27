@@ -1,0 +1,42 @@
+
+-------------------------
+--venta
+-------------------------
+
+select * from tmp_dif_local_venta_cloud_op;
+select * from tmp_dif_venta_cloud_op;
+
+select a.fecha,convert(decimal(20,7),substring(a.venta_neta,1,11)) venta_neta_tv_cloud
+,b.venta_neta venta_neta_fv_op,
+abs((convert(decimal(20,7),substring(a.venta_neta,1,11)))-b.venta_neta) dif_venta_cloud_op  from tmp_venta_fecha_tv_cloud a
+inner join 
+tmp_venta_fecha_fv_op b
+on ltrim(rtrim(a.fecha))=ltrim(rtrim(b.fecha));
+
+select a.fechas,a.codigo_local,convert(decimal(20,7),substring(a.venta_neta,1,11)) venta_neta_cloud,isnull(b.venta_neta,0) venta_neta_op
+,abs(convert(decimal(20,7),substring(a.venta_neta,1,11))- isnull(b.venta_neta,0)) dif_venta_neta_cloud_op
+ from [dbo].[tmp_venta_fecha_local_tv_cloud] a
+left join [dbo].[tmp_venta_fecha_local_fv_op] b 
+on a.fechas=b.fecha  and a.codigo_local=b.codigo_local;
+
+-------------------------
+--costo
+-------------------------
+
+select * from tmp_dif_costo_cloud_op;
+
+select a.fecha,convert(decimal(20,7),substring(a.costo,1,11)) costo_tv_cloud
+,isnull(b.costo,0) costo_fv_op,
+abs((convert(decimal(20,7),substring(a.costo,1,11)))-isnull(b.costo,0)) dif_costo_cloud_op  from tmp_costo_fecha_tv_cloud a
+left join 
+tmp_costo_fecha_fv_op b
+on ltrim(rtrim(a.fecha))=ltrim(rtrim(b.fecha))
+order by fecha ;
+
+select * from tmp_dif_local_costo_cloud_op;
+
+select a.fechas,a.codigo_local,convert(decimal(20,7),substring(a.costo,1,11)) costo_cloud,isnull(b.costo,0) costo_op
+,abs(convert(decimal(20,7),substring(a.costo,1,11))- isnull(b.costo,0)) dif_costo_cloud_op
+ from [dbo].[tmp_costo_fecha_local_tv_cloud] a
+left join [dbo].[tmp_costo_fecha_local_fv_op] b 
+on a.fechas=b.fecha  and a.codigo_local=b.codigo_local;

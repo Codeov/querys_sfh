@@ -1,0 +1,182 @@
+
+create or replace table `sistemas-bi.Tacho.promo`
+partition by fecha
+as
+select distinct a.fecha_carga fecha,a.codigo_local,a.codigo_producto,a.Nombre_Producto,a.Codigo_Mecanica,a.mecanica,a.Codigo_Promocion,a.Nombre_Promocion,a.precio_base,a.Precio_Promo
+from `spsa-comercial-pricing-sd.Evolutivo_Precios.Promociones_Vigentes` a
+inner join `sistemas-bi.Tacho.tmp_sku` b
+on a.codigo_producto=lpad(b.codigo_producto,11,"0")
+where a.fecha_carga>='2024-01-01'
+and a.codigo_local='P037'
+and a.mecanica<>''
+and a.precio_promo <> 0
+;
+
+create or replace table `sistemas-bi.Tacho.promo_mult_acum`
+partition by fecha
+as
+select 
+a.*
+from
+(
+select 
+ a.fecha,a.codigo_local,a.codigo_producto,a.Nombre_Producto,a.Codigo_Mecanica,a.mecanica,a.Codigo_Promocion,a.Nombre_Promocion,a.precio_base,a.Precio_Promo
+from
+(
+  select 
+  a.fecha,a.codigo_local,a.codigo_producto,a.Nombre_Producto,a.Codigo_Mecanica,a.mecanica,a.Codigo_Promocion,a.Nombre_Promocion,a.precio_base,a.Precio_Promo
+  from
+  (
+    select a.fecha,a.codigo_local,a.codigo_producto,a.Nombre_Producto,a.Codigo_Mecanica,a.mecanica,a.Codigo_Promocion,a.Nombre_Promocion,a.precio_base,a.Precio_Promo
+  from
+  (
+    select row_number() over (partition by a.fecha,a.codigo_local,a.codigo_producto,a.codigo_mecanica,a.codigo_promocion order by a.precio_promo desc) id,
+    a.fecha,a.codigo_local,a.codigo_producto,a.Nombre_Producto,a.Codigo_Mecanica,a.mecanica,a.Codigo_Promocion,a.Nombre_Promocion,a.precio_base,a.Precio_Promo 
+    from  `sistemas-bi.Tacho.promo` a
+    --where a.mecanica not in ('Porcentaje de Descuento')
+  ) a
+  where a.id=1
+  ) a
+  inner join
+  (
+    select distinct
+    a.fecha,a.codigo_local,a.codigo_producto 
+    from  `sistemas-bi.Tacho.promo` a
+    where a.mecanica in ('Porcentaje de Descuento')
+  ) b
+  on a.fecha=b.fecha and a.codigo_local=b.codigo_local and a.codigo_producto=b.codigo_producto
+
+) a 
+left join 
+( 
+  select
+    a.fecha,a.codigo_local,a.codigo_producto,count(1)
+    from  `sistemas-bi.Tacho.promo` a
+    where a.mecanica in ('Porcentaje de Descuento')
+    group by  a.fecha,a.codigo_local,a.codigo_producto
+    having count(1) =1
+    order by a.fecha,a.codigo_local,a.codigo_producto
+) b
+on a.fecha=b.fecha and a.codigo_local=b.codigo_local and a.codigo_producto=b.codigo_producto
+where b.fecha is null
+) a
+;
+
+create or replace table `sistemas-bi.Tacho.promo_uni_acum`
+partition by fecha
+as
+
+ select 
+  a.fecha,a.codigo_local,a.codigo_producto,a.Nombre_Producto,a.Codigo_Mecanica,a.mecanica,a.Codigo_Promocion,a.Nombre_Promocion,a.precio_base,a.Precio_Promo
+  from
+  (
+    select a.fecha,a.codigo_local,a.codigo_producto,a.Nombre_Producto,a.Codigo_Mecanica,a.mecanica,a.Codigo_Promocion,a.Nombre_Promocion,a.precio_base,a.Precio_Promo
+  from
+  (
+    select row_number() over (partition by a.fecha,a.codigo_local,a.codigo_producto,a.codigo_mecanica,a.codigo_promocion order by a.precio_promo desc) id,
+    a.fecha,a.codigo_local,a.codigo_producto,a.Nombre_Producto,a.Codigo_Mecanica,a.mecanica,a.Codigo_Promocion,a.Nombre_Promocion,a.precio_base,a.Precio_Promo 
+    from  `sistemas-bi.Tacho.promo` a
+    where a.mecanica in ('Porcentaje de Descuento')
+  ) a
+  where a.id=1
+  ) a
+  inner join
+  (
+    select
+    a.fecha,a.codigo_local,a.codigo_producto,count(1)
+    from  `sistemas-bi.Tacho.promo` a
+    where a.mecanica in ('Porcentaje de Descuento')
+    group by  a.fecha,a.codigo_local,a.codigo_producto
+    having count(1) =1
+    order by a.fecha,a.codigo_local,a.codigo_producto
+  ) b
+  on a.fecha=b.fecha and a.codigo_local=b.codigo_local and a.codigo_producto=b.codigo_producto;
+
+create or replace table `sistemas-bi.Tacho.promos_consolidada`
+partition by fecha
+as
+select
+a.fecha,a.codigo_local,a.codigo_producto,a.Nombre_Producto,'1' Codigo_Mecanica,'Porcentaje de Descuento' mecanica,b.Codigo_Promocion,b.Nombre_Promocion,a.precio_base,
+a.precio_promo-a.Precio_Promo*(b.precio_promo/100) precio_promo, a.mecanica mecanica_afecta,a.Codigo_Promocion codigo_promocion_afecta
+from
+(
+  select 
+  a.fecha,a.codigo_local,a.codigo_producto,a.Nombre_Producto,a.Codigo_Mecanica,a.mecanica,a.Codigo_Promocion,a.Nombre_Promocion,a.precio_base,a.Precio_Promo
+  from
+  (
+  select 
+  row_number() over (partition by a.fecha,a.codigo_local,a.codigo_producto order by a.Precio_Promo asc) id,
+  a.fecha,a.codigo_local,a.codigo_producto,a.Nombre_Producto,a.Codigo_Mecanica,a.mecanica,a.Codigo_Promocion,a.Nombre_Promocion,a.precio_base,a.Precio_Promo
+  from
+  `sistemas-bi.Tacho.promo_mult_acum` a
+  where a.mecanica not in ('Porcentaje de Descuento')
+  ) a 
+  where id=1
+) a
+inner join 
+(
+  select 
+  a.fecha,a.codigo_local,a.codigo_producto,a.codigo_promocion,a.nombre_promocion,a.Precio_Promo
+  from
+  (
+    select 
+    row_number() over(partition by a.fecha,a.codigo_local,a.codigo_producto order by a.precio_promo desc) id,a.fecha,a.codigo_local,a.codigo_producto,a.Codigo_Promocion,a.Nombre_Promocion,a.Precio_Promo
+    from
+    `sistemas-bi.Tacho.promo_mult_acum` a
+    where a.mecanica='Porcentaje de Descuento'
+  ) a
+  where a.id=1
+) b
+on a.fecha=b.fecha and a.codigo_local=b.codigo_local and a.codigo_producto=b.codigo_producto
+union all
+select 
+a.fecha,a.codigo_local,a.codigo_producto,a.Nombre_Producto,a.Codigo_Mecanica,a.mecanica,a.Codigo_Promocion,a.Nombre_Promocion,a.precio_base,
+a.precio_base-a.Precio_Promo*(a.precio_promo/100) precio_promo,'' mecanica_afecta,'' codigo_promocion_afecta
+from `sistemas-bi.Tacho.promo_uni_acum` a
+union all
+select 
+a.fecha,a.codigo_local,a.codigo_producto,a.Nombre_Producto,a.Codigo_Mecanica,a.mecanica,a.Codigo_Promocion,a.Nombre_Promocion,a.precio_base,a.Precio_Promo
+,'' mecanica_afecta,'' codigo_promocion_afecta
+from 
+(
+select  
+row_number() over (partition by a.fecha,a.codigo_local,a.codigo_producto,a.codigo_mecanica order by a.precio_promo asc) id,
+a.fecha,a.codigo_local,a.codigo_producto,a.Nombre_Producto,a.Codigo_Mecanica,a.mecanica,a.Codigo_Promocion,a.Nombre_Promocion,a.precio_base,a.Precio_Promo
+from
+(
+  select row_number() over (partition by a.fecha,a.codigo_local,a.codigo_producto,a.codigo_mecanica,a.codigo_promocion order by a.precio_promo desc) id,
+  a.fecha,a.codigo_local,a.codigo_producto,a.Nombre_Producto,a.Codigo_Mecanica,a.mecanica,a.Codigo_Promocion,a.Nombre_Promocion,a.precio_base,a.Precio_Promo 
+  from  `sistemas-bi.Tacho.promo` a
+  where a.mecanica not in ('Porcentaje de Descuento')
+) a 
+where a.id=1
+) a
+;
+
+////////////////////////////////////////////////////////
+
+
+select a.fecha,a.codigo_local,a.codigo_producto,a.Codigo_Mecanica,a.Codigo_Promocion,mecanica_afecta,count(1) from `sistemas-bi.Tacho.promos_consolidada` a
+group by a.fecha,a.codigo_local,a.codigo_producto,a.Codigo_Mecanica,a.Codigo_Promocion,mecanica_afecta
+having count(1) >1;
+
+select a.fecha,a.codigo_local,a.codigo_producto,a.Codigo_Mecanica,a.Codigo_Promocion,count(1) from `sistemas-bi.Tacho.promos_consolidada` a
+group by a.fecha,a.codigo_local,a.codigo_producto,a.Codigo_Mecanica,a.Codigo_Promocion
+having count(1) >1;
+
+select a.*from `sistemas-bi.Tacho.promos_consolidada` a 
+where a.codigo_producto='00020011159' and a.fecha='2024-02-01'
+order by a.fecha,a.codigo_local,a.codigo_producto,a.codigo_promocion,a.Codigo_Mecanica;
+
+select a.* from `sistemas-bi.Tacho.promo` a 
+where 
+a.fecha='2024-02-01'
+and a.codigo_local='P037'
+and a.codigo_producto='00000000840';
+
+
+
+
+
+
+

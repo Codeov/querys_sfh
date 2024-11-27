@@ -1,0 +1,76 @@
+
+create or replace table `sistemas-bi.Tacho.promo_prod`
+partition by fecha
+as
+select
+a.fecha_carga fecha,a.Codigo_local,a.Codigo_Producto,a.precio_base,
+a.Codigo_Promocion,a.Nombre_Promocion,
+a.Precio_Promo
+from
+(
+  select 
+  row_number() over (partition by a.fecha_carga,a.Codigo_local,a.Codigo_Producto,a.Codigo_Promocion order by a.precio_promo desc ) id,
+  a.fecha_carga,a.Codigo_local,a.Codigo_Producto,a.precio_base,
+  a.Codigo_Promocion,a.Nombre_Promocion,
+  a.Precio_Promo
+  from
+  (
+    select distinct a.fecha_carga,a.Codigo_local,a.Codigo_Producto,a.precio_base,
+    a.Codigo_Promocion,a.Nombre_Promocion,
+    a.Precio_Promo from `spsa-comercial-pricing-sd.Evolutivo_Precios.Promociones_Vigentes` a
+    inner join `sistemas-bi.Tacho.tmp_productos` b
+    on a.codigo_producto=lpad(b.codigo_producto,11,"0")
+    where a.Fecha_carga>= '2024-01-01'
+  ) a
+) a
+where a.id=1 and a.precio_Promo<>0;
+
+create or replace table `sistemas-bi.Tacho.promo_prod_min`
+partition by fecha
+as
+select
+fecha,a.codigo_local,a.nombre,
+a.Codigo_Producto,a.nombre_producto,
+a.precio_base,a.Codigo_Promocion,a.Nombre_Promocion,a.Precio_Promo
+from
+(
+select
+row_number()over(partition by a.fecha,a.codigo_local,a.Codigo_Producto order by a.Precio_Promo asc ) id,
+ a.fecha,a.codigo_local,c.nombre,
+a.Codigo_Producto,b.nombre_producto,
+a.precio_base,a.Codigo_Promocion,a.Nombre_Promocion,a.Precio_Promo
+ from `sistemas-bi.Tacho.promo_prod` a
+inner join `SPSA.dim_producto` b
+on a.codigo_producto=b.codigo_producto
+inner join `SPSA.dim_local` c
+on a.codigo_local=c.codigo_local
+) a
+where a.id=1;
+
+
+--2024-01-01/1000/00000016894/
+--23241640/11.3
+--23259008/11
+
+select a.* from `sistemas-bi.Tacho.promo_prod_min` a
+where a.fecha='2024-01-01' and a.codigo_local='1000' and a.codigo_producto='00000016894';
+
+
+select a.fecha,
+case when b.formato like '%LAZA VE%' then 'PLAZA VEA'
+else b.formato end formato,
+a.codigo_local,a.nombre,a.Codigo_Producto,a.nombre_producto,
+a.precio_base precio_regular,a.Codigo_Promocion,a.Nombre_Promocion,a.Precio_Promo from `sistemas-bi.Tacho.promo_prod_min` a
+inner join `SPSA.dim_local` b
+on a.codigo_local=b.codigo_local
+where b.formato in ('PLAZA VEA','PLAZA VEA SUPER','PLAZA VEA EXPRESS') and
+a.codigo_local in ('P037')
+union all
+select a.fecha,
+case when b.formato like '%LAZA VE%' then 'PLAZA VEA'
+else b.formato end formato,
+a.codigo_local,a.nombre,a.Codigo_Producto,a.nombre_producto,
+a.precio_base precio_regular,a.Codigo_Promocion,a.Nombre_Promocion,a.Precio_Promo from `sistemas-bi.Tacho.promo_prod_min` a
+inner join `SPSA.dim_local` b
+on a.codigo_local=b.codigo_local
+where b.formato in ('VIVANDA') ;

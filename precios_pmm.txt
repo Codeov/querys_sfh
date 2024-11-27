@@ -1,0 +1,12 @@
+Tabla de precios - PMM:
+
+SELECT  P.PRD_LVL_CHILD, 
+                P.ORG_LVL_CHILD, 
+                P.PRD_UPC,
+                P.PRC_BOOK_NUMBER, 
+                P.PRC_PRICE, 
+                P.PRC_HDR_NUMBER
+            FROM CHLPRCE2 P
+            INNER JOIN ORGMSTEE O ON O.ORG_LVL_CHILD = P.ORG_LVL_CHILD
+            WHERE O.ORG_LVL_NUMBER IN (264)
+

@@ -1,0 +1,47 @@
+SELECT to_char(h.fecha,'dd/mm/yyyy')
+            ,h.cod_local
+            ,h.nom_local
+            ,h.hora
+            ,h.terminal
+            ,h.secuencia
+            ,h.cod_operator
+            ,h.cod_supervisor
+            ,h.nom_supervisor
+            ,h.total
+            ,to_char(h.fecha_ori,'dd/mm/yyyy') AS fecha_ori
+            ,h.cod_local_ori
+            ,h.nom_local_ori
+            ,h.terminal_ori
+            ,h.secuencia_ori
+            ,h.cod_operator_ori
+            ,h.total_ori
+            ,h.condicion
+            ,h.cod_motivo
+            ,h.des_motivo
+            ,h.tipo
+            ,d.des_medio_pago
+            ,d.tarjeta
+            ,d.monto
+            ,d.cod_autoriza
+            ,h.folio
+            ,h.folio_ori
+            --<i>emauricio180522
+            ,h.NUM_OP
+            ,h.NUM_OP_ORI
+            --<f>emauricio180522
+            ,decode(h.hed_origentrx,1,'No Reinyectada',3,'Reinyectada',5,'Reinyectada') origen_trx--<>emauricio220822
+        FROM --(select * from ict2_cons_notacredito where fecha <= to_date('20220822','yyyymmdd')) h -- ict2_cons_notacredito    h --<>emauricio220822
+            ict2_cons_notacredito h
+            ,ict2_cons_notacredito_mp d
+            ,IRS_LOCALES             l,
+             ECT2SP.IFC_SOCIEDADES   iso
+       WHERE h.fecha = d.fecha
+         AND h.cod_local = d.cod_local
+         AND h.terminal = d.terminal
+         AND h.secuencia = d.secuencia
+         AND h.fecha = to_date('20240102','yyyymmdd') 
+         and h.cod_local = l.loc_numero 
+         AND l.loc_sociedad = iso.soc_codigo
+         AND h.cod_local = 195
+         and h.terminal=20
+         and h.secuencia= 9662;

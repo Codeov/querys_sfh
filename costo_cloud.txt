@@ -1,0 +1,19 @@
+select count(1) cnt from  `sistemas-bi.SPSA_STAGE.tmp_costo` a 
+  inner join `sistemas-bi.SPSA.dim_local` b 
+  on ltrim(rtrim(a.cod_local))= ltrim(rtrim(b.codigo_alterno))
+  left join `sistemas-bi.SPSA_STAGE.tmp_costo_fee_factor` c
+  on ltrim(rtrim(c.id_formato))= ltrim(rtrim(b.formato))
+  left join `sistemas-bi.SPSA.dim_producto` d
+  on d.codigo_producto=a.cod_producto and d.flag_tu_entrada = '2' and b.formato in ('VIVANDA','PLAZA VEA EXPRESS','PLAZA VEA','PLAZA VEA SUPER')
+	where 
+	c.codigo_local is null and b.codigo_local not like 'SO%' --18190933
+	union all
+	select count(1) cnt from  `sistemas-bi.SPSA_STAGE.tmp_costo` a 
+  inner join `sistemas-bi.SPSA.dim_local` b 
+  on ltrim(rtrim(a.cod_local))= ltrim(rtrim(b.codigo_alterno))
+  left join `sistemas-bi.SPSA_STAGE.tmp_costo_fee_factor` c
+  on ltrim(rtrim(c.id_formato))= ltrim(rtrim(b.formato)) and c.codigo_local=b.codigo_local
+  left join `sistemas-bi.SPSA.dim_producto` d
+  on d.codigo_producto=a.cod_producto and d.flag_tu_entrada = '2' and b.formato in ('VIVANDA','PLAZA VEA EXPRESS','PLAZA VEA','PLAZA VEA SUPER')
+	where 
+	c.codigo_local is not null and b.codigo_local like 'SO%';

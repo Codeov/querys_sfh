@@ -1,0 +1,85 @@
+
+
+declare v_fecha date;
+declare v_fecha_fin date;
+declare v_fecha_fa date;
+declare v_fecha_fa_fin date;
+
+
+set v_fecha= '2024-01-01';
+set v_fecha_fin= '2024-03-31';
+
+set v_fecha_fa = (select distinct a.fecha_fa from `SPSA.dim_tiempo` a
+where a.fecha= v_fecha);
+set v_fecha_fa_fin = (select distinct a.fecha_fa from `SPSA.dim_tiempo` a
+where a.fecha= v_fecha_fin);
+
+with ticket_act
+as 
+(
+  select a.fecha,a.codigo_local,a.numero_terminal,a.numero_transaccion,a.codigo_tipo_doc_trx,a.id_ticket,a.codigo_producto,
+  sum(a.venta_neta) venta_neta
+from `sistemas-bi.SPSA.ticket_venta` a
+inner join `SPSA.dim_local` b
+on a.codigo_local=b.codigo_local
+where a.fecha between v_fecha and v_fecha_fin
+and b.formato in ('PLAZA VEA','PLAZA VEA SUPER','PLAZA VEA EXPRESS','VIVANDA')
+group by a.fecha,a.codigo_local,a.numero_terminal,a.numero_transaccion,a.codigo_tipo_doc_trx,a.id_ticket,a.codigo_producto
+),ticket_ant
+as 
+(
+  select a.fecha,a.codigo_local,a.numero_terminal,a.numero_transaccion,a.codigo_tipo_doc_trx,a.id_ticket,a.codigo_producto,
+  sum(a.venta_neta) venta_neta
+from `sistemas-bi.SPSA.ticket_venta` a
+inner join `SPSA.dim_local` b
+on a.codigo_local=b.codigo_local
+where a.fecha between v_fecha_fa and v_fecha_fa_fin
+and b.formato in ('PLAZA VEA','PLAZA VEA SUPER','PLAZA VEA EXPRESS','VIVANDA') 
+group by a.fecha,a.codigo_local,a.numero_terminal,a.numero_transaccion,a.codigo_tipo_doc_trx,a.id_ticket,a.codigo_producto
+)
+
+select
+concat(a.codigo_producto,"-",c.nombre_producto) producto,a.venta_neta,a.trx,a.ticket_promedio,
+case when ifnull(b.venta_neta_ant,0)=0 then 0 else (a.venta_neta-ifnull(b.venta_neta_ant,0))/ifnull(b.venta_neta_ant,0) end var_vta,
+case when ifnull(b.trx_ant,0)=0 then 0 else (a.trx-ifnull(b.trx_ant,0))/ifnull(b.trx_ant,0) end var_trx,
+case when ifnull(b.ticket_promedio_ant,0) =0 then 0 else (a.ticket_promedio-ifnull(b.ticket_promedio_ant,0))/ifnull(b.ticket_promedio_ant,0) end var_ticket_promedio
+from
+(
+  select a.codigo_producto,a.venta_neta,ifnull(b.trx,0) trx,
+  case when ifnull(b.trx,0)=0 then 0
+  else (a.venta_neta/ifnull(b.trx,0)) end ticket_promedio from
+  (
+    select a.codigo_producto,sum(ifnull(a.venta_neta,0)) venta_neta from ticket_act a
+    group by a.codigo_producto
+  ) a 
+  left join
+  (
+    select a.codigo_producto,ifnull(count(distinct a.id_ticket),0) trx from ticket_act a
+    where a.codigo_tipo_doc_trx<>'NCR'
+    group by a.codigo_producto
+  ) b
+  on a.codigo_producto=b.codigo_producto
+) a
+left join
+(
+  select a.codigo_producto,a.venta_neta venta_neta_ant,ifnull(b.trx,0) trx_ant,
+  case when ifnull(b.trx,0)=0 then 0 
+  else (a.venta_neta/ifnull(b.trx,0)) end ticket_promedio_ant from
+  (
+    select a.codigo_producto,sum(ifnull(a.venta_neta,0)) venta_neta from ticket_ant a
+    group by a.codigo_producto
+  ) a 
+  left join
+  (
+    select a.codigo_producto,ifnull(count(distinct a.id_ticket),0) trx from ticket_ant a
+    where a.codigo_tipo_doc_trx<>'NCR'
+    group by a.codigo_producto
+  ) b
+  on a.codigo_producto=b.codigo_producto
+) b
+on a.codigo_producto=b.codigo_producto
+left join `SPSA.dim_producto` c 
+on a.codigo_producto=c.codigo_producto
+
+
+

@@ -1,0 +1,9 @@
+
+select * from [dbo].[Surtido] 
+where codigo_local in ('1423', '1424', '1425', '1426', '1427', '1428', '1429', '1430', '1431', '1432');
+
+select * from [dbo].[Stock_Diario] 
+where codigo_local in ('1423', '1424', '1425', '1426', '1427', '1428', '1429', '1430', '1431', '1432');
+
+select a.Nombre,a.formato from dim_local a 
+where a.codigo_Sap in ('1423', '1424', '1425', '1426', '1427', '1428', '1429', '1430', '1431', '1432');

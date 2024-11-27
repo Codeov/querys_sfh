@@ -1,0 +1,12 @@
+----fecha
+
+--truncate table process_cube;
+--select * from process_cube;
+
+--insert into process_cube
+--select id_tiempo as id_tiempo_inicio, id_tiempo as id_tiempo_final ,left(convert(varchar,min(convert(date,fecha)),112),8) as fecha_particion,
+--'P' estado
+--from dbo.dim_tiempo 
+--where 
+--fecha between '2023-02-20' and '2023-03-16'
+--group by id_tiempo;

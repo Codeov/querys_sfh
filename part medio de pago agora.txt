@@ -1,0 +1,86 @@
+begin
+
+ declare v_fecha_ini date;
+ declare v_fecha_fin date;
+ declare v_cod_loc string;
+
+ set v_fecha_ini = '2022-10-26';
+ set v_fecha_fin = '2022-10-26';
+ set v_cod_loc = 'P195';
+
+ delete `sistemas-bi.SPSA.agora` where true; --fact_agora
+
+--transacciones qr
+insert into `sistemas-bi.SPSA.agora`
+SELECT c.dato_f2,c.codigo_local,c.codigo_cajera,
+      sum(c.cantidad_trx) trx_qr, 0 trx_agora,0 trx_total,0 vta_net_tarj_agor,0 vta_bta_tarj_agor
+      FROM `sistemas-bi.SPSA.int_fact_forma_pago` a
+      inner join (select a.dato_f2,a.codigo_local,a.numero_terminal,a.numero_transaccion,a.codigo_cajera,count(distinct(a.id_ticket)) cantidad_trx  from `sistemas-bi.SPSA.int_fact_ticket` a
+                  where  a.dato_f2 between v_fecha_ini and v_fecha_fin and a.codigo_local = v_cod_loc group by  a.dato_f2,a.codigo_local,a.numero_terminal,a.numero_transaccion,a.codigo_cajera
+                  ) c
+      on a.codigo_local = c.codigo_local and a.fecha=c.dato_f2 and a.numero_terminal = c.numero_terminal and a.numero_transaccion = c.numero_transaccion
+      inner join `sistemas-bi.SPSA.dim_medio_pago` b
+      on cast(a.codigo_medio_pago as int64) =b.codigo_medio_pago
+      WHERE a.fecha between v_fecha_ini and v_fecha_fin  and 
+      a.codigo_local= v_cod_loc and 
+      b.codigo_medio_pago in (9)
+      group by  c.dato_f2,c.codigo_local,c.codigo_cajera;
+
+--transacciones agora
+merge `sistemas-bi.SPSA.agora` a
+    using (SELECT c.dato_f2 fecha,c.codigo_local,c.codigo_cajera,
+          sum(c.cantidad_trx) trx_agora
+          FROM `sistemas-bi.SPSA.int_fact_forma_pago` a
+          inner join (select a.dato_f2,a.codigo_local,a.numero_terminal,a.numero_transaccion,a.codigo_cajera,count(distinct(a.id_ticket)) cantidad_trx  from `sistemas-bi.SPSA.int_fact_ticket` a
+                      where  a.dato_f2 between v_fecha_ini and v_fecha_fin and a.codigo_local = v_cod_loc group by  a.dato_f2,a.codigo_local,a.numero_terminal,a.numero_transaccion,a.codigo_cajera
+                      ) c
+          on a.codigo_local = c.codigo_local and a.fecha=c.dato_f2 and a.numero_terminal = c.numero_terminal and a.numero_transaccion = c.numero_transaccion
+          inner join `sistemas-bi.SPSA.dim_medio_pago` b
+          on cast(a.codigo_medio_pago as int64) =b.codigo_medio_pago
+          WHERE a.fecha between v_fecha_ini and v_fecha_fin  and 
+          a.codigo_local= v_cod_loc and 
+          b.codigo_medio_pago in (9,12,13)
+          group by  c.dato_f2,c.codigo_local,c.codigo_cajera) b 
+on a.dato_f2= b.fecha and a.codigo_local=b.codigo_local and a.codigo_cajera= b.codigo_cajera
+when matched then
+update set a.trx_agora = b.trx_agora
+when not matched then
+insert (dato_f2, codigo_local, codigo_cajera, trx_qr, trx_agora, trx_total, vta_net_tarj_agor,vta_bta_tarj_agor)
+values (b.fecha,b.codigo_local,b.codigo_cajera,0,b.trx_agora,0,0,0);
+
+--transacciones total
+merge `sistemas-bi.SPSA.agora` a
+    using (SELECT c.dato_f2 fecha,c.codigo_local,c.codigo_cajera,
+    sum(c.cantidad_trx) trx_total
+    FROM `sistemas-bi.SPSA.int_fact_forma_pago` a
+    inner join (select a.dato_f2,a.codigo_local,a.numero_terminal,a.numero_transaccion,a.codigo_cajera,count(distinct(a.id_ticket)) cantidad_trx  from `sistemas-bi.SPSA.int_fact_ticket` a
+                where  a.dato_f2 between v_fecha_ini and v_fecha_fin and a.codigo_local = v_cod_loc group by  a.dato_f2,a.codigo_local,a.numero_terminal,a.numero_transaccion,a.codigo_cajera
+                ) c
+    on a.codigo_local = c.codigo_local and a.fecha=c.dato_f2 and a.numero_terminal = c.numero_terminal and a.numero_transaccion = c.numero_transaccion
+    inner join `sistemas-bi.SPSA.dim_medio_pago` b
+    on cast(a.codigo_medio_pago as int64) =b.codigo_medio_pago
+    WHERE a.fecha between v_fecha_ini and v_fecha_fin  and 
+    a.codigo_local= v_cod_loc
+    group by  c.dato_f2,c.codigo_local,c.codigo_cajera) b 
+on a.dato_f2= b.fecha and a.codigo_local=b.codigo_local and a.codigo_cajera= b.codigo_cajera
+when matched then
+update set a.trx_total = b.trx_total
+when not matched then
+insert (dato_f2, codigo_local, codigo_cajera, trx_qr, trx_agora, trx_total, vta_net_tarj_agor,vta_bta_tarj_agor)
+values (b.fecha,b.codigo_local,b.codigo_cajera,0,0,b.trx_total,0,0);
+
+--venta tarjeta agora
+merge `sistemas-bi.SPSA.agora` a
+    using (select a.fecha fecha,a.codigo_local,a.codigo_cajera,sum(a.venta_neta) venta_neta,sum(a.venta_bruta) venta_bruta  from `sistemas-bi.SPSA.ticket_venta` a
+    where a.fecha between v_fecha_ini and v_fecha_fin
+    and a.codigo_local = v_cod_loc
+    and a.codigo_tipo_venta = 1
+    and a.codigo_producto = '00020197814'
+    group by a.fecha,a.codigo_local,a.codigo_cajera ) b 
+on a.dato_f2= b.fecha and a.codigo_local=b.codigo_local and a.codigo_cajera= b.codigo_cajera
+when matched then
+update set a.vta_net_tarj_agor = b.venta_neta, a.vta_bta_tarj_agor= b.venta_bruta
+when not matched then
+insert (dato_f2, codigo_local, codigo_cajera, trx_qr, trx_agora, trx_total, vta_net_tarj_agor,vta_bta_tarj_agor)
+values (b.fecha,b.codigo_local,b.codigo_cajera,0,0,0,b.venta_neta,b.venta_bruta);
+end

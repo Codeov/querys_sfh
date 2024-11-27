@@ -1,0 +1,47 @@
+SELECT (split(cast(a.fecha as string),'-'))[safe_ordinal(1)] anio,
+  (split(cast(a.fecha as string),'-'))[safe_ordinal(2)] mes,
+  b.codigo_local codigo_local,
+  b.nombre nombre_local,
+  c.codigo_producto codigo_producto,
+  c.nombre_producto descripcion_producto,
+  sum(a.venta_neta) venta_soles,
+  sum(a.venta_unidad) venta_unidad
+  FROM `sistemas-bi.SPSA.ticket_venta` a 
+inner join `sistemas-bi.SPSA.dim_local` b
+on a.codigo_local=b.codigo_local 
+inner join `sistemas-bi.SPSA.dim_producto` c
+on a.codigo_producto=c.codigo_producto
+where a.fecha between '2019-01-01' and '2019-12-31'
+and b.formato in ('PLAZA VEA','PLAZA VEA SUPER','PLAZA VEA EXPRESS','VIVANDA')
+--and b.codigo_local = 'P195'
+and a.codigo_producto in (
+  '00000130457','00000131912','00000131922','00000131925','00020076364',
+  '00020083434','00020098380','00020174211','00020174211','00020174216',
+  '00020174218','00020174221')
+group by a.fecha,b.codigo_local,b.nombre,c.codigo_producto,c.nombre_producto
+;
+
+SELECT (split(cast(a.fecha as string),'-'))[safe_ordinal(1)] anio,
+  (split(cast(a.fecha as string),'-'))[safe_ordinal(2)] mes,
+  c.codigo_producto codigo_producto,
+  c.nombre_producto descripcion_producto,
+  sum(a.venta_neta) venta_soles,
+  sum(a.venta_unidad) venta_unidad
+  FROM `sistemas-bi.SPSA.ticket_venta` a 
+inner join `sistemas-bi.SPSA.dim_local` b
+on a.codigo_local=b.codigo_local 
+inner join `sistemas-bi.SPSA.dim_producto` c
+on a.codigo_producto=c.codigo_producto
+where a.fecha between '2019-01-01' and '2019-12-31'
+and b.formato in ('PLAZA VEA','PLAZA VEA SUPER','PLAZA VEA EXPRESS','VIVANDA')
+--and b.codigo_local = 'P195'
+and a.codigo_producto in (
+  '00000130457','00000131912','00000131922','00000131925','00020076364',
+  '00020083434','00020098380','00020174211','00020174211','00020174216',
+  '00020174218','00020174221')
+group by a.fecha,c.codigo_producto,c.nombre_producto
+;
+
+
+
+---SELECT EXTRACT(YEAR FROM a.fecha)anio ,EXTRACT(month FROM fecha) AS mes, a.codigo_tipo_sssFROM `sistemas-bi.SPSA.ticket_venta` a  where codigo_local = 'M856'and fecha >= '2020-11-01'group by EXTRACT(YEAR FROM a.fecha) ,EXTRACT(month FROM fecha) , a.codigo_local,a.fecha,a.codigo_tipo_sssorder by 1,2

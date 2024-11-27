@@ -1,0 +1,1 @@
+cast(REPLACE(REPLACE(REPLACE(b.nombre_seccion,CHAR(9),''),CHAR(10),''),CHAR(13),'') as varchar(250)) nombre_seccion

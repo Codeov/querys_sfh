@@ -1,0 +1,3 @@
+pip install auto-py-to-exe (codigo para instalar el ejecutable de python)
+
+pip list(listar las librerías instaladas de python)

@@ -1,0 +1,21 @@
+SELECT 
+formato,nombre_division,nombre_area,nombre_seccion,nombre_linea,codigo_linea,
+isnull([2023-05-07],0) as '2023-05-07',isnull([2023-05-14],0) as '2023-05-14',isnull([2023-05-21],0) as '2023-05-21',isnull([2023-05-28],0) as '2023-05-28'
+,isnull([2023-05-31],0) as '2023-05-31'
+FROM  
+(
+  select b.formato,c.nombre_division,c.nombre_area,c.nombre_seccion,c.nombre_linea,codigo_linea,a.fecha,sum(a.stock_valorizado) stock_valorizado from fact_planificacion a 
+ inner join dim_local b 
+ on a.id_local=b.id_local
+ inner join dim_producto c 
+ on a.id_producto=c.id_producto
+ where fecha in ('2023-05-07','2023-05-14','2023-05-21','2023-05-28','2023-05-31')
+ --and b.codigo_local= 'P195'
+ group by b.formato,c.nombre_division,c.nombre_area,c.nombre_seccion,c.nombre_linea,codigo_linea,a.fecha
+) AS a  
+PIVOT  
+(  
+  sum(stock_valorizado)
+  FOR fecha IN ([2023-05-07],[2023-05-14],[2023-05-21],[2023-05-28],[2023-05-31])  
+) AS PivotTable
+order by 1;  

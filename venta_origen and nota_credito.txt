@@ -1,0 +1,34 @@
+select  
+h.hed_pais, h.hed_origentrx,h.hed_local,h.hed_pos, h.hed_numtrx,h.hed_horatrx,h.hed_fechatrx,h.hed_fcontable,
+h.hed_rutdoc,h2.hed_rutdoc ruco,h.hed_numdoc_origen,h2.hed_numdocdel fo, h2.hed_pais p0, h2.hed_origentrx ot,h2.hed_local lo,h2.hed_pos co, h2.hed_numtrx tro,h2.hed_fcontable
+FROM ctx_header_trx h, ctx_header_trx h2
+WHERE      
+h.hed_local = 195 and
+h.hed_fcontable = '20-12-2023' 
+AND h.hed_anulado = 'N'
+AND h.hed_tipotrx = 'PVT'
+AND h.hed_tipodoc = 'NCR'
+AND h.hed_fechatrx_origen = h2.hed_fcontable(+)
+AND h.hed_local_origen = h2.hed_local(+)
+AND h.hed_pos_origen = h2.hed_pos(+)
+AND h.hed_numtrx_origen = h2.hed_numtrx(+)
+;
+
+//////////////////////////////////////////
+select  
+h.hed_fcontable fecha,h.hed_local local,h.hed_pos caja, h.hed_numtrx num_trx,h.hed_horatrx hora_trx,
+h.hed_rutdoc ruc,h.hed_numdocdel doc,
+h2.hed_fcontable fecha_o,h2.hed_local local_o,h2.hed_pos caja_o, h2.hed_numtrx num_trx_o,
+h2.hed_rutdoc ruc_o,h.hed_numdoc_origen doc_o
+FROM ctx_header_trx h, ctx_header_trx h2
+WHERE      
+h.hed_local = 195 and
+h.hed_fcontable = '07-01-2024' 
+AND h.hed_anulado = 'N'
+AND h.hed_tipotrx = 'PVT'
+AND h.hed_tipodoc = 'NCR'
+AND h.hed_fechatrx_origen = h2.hed_fcontable(+)
+AND h.hed_local_origen = h2.hed_local(+)
+AND h.hed_pos_origen = h2.hed_pos(+)
+AND h.hed_numtrx_origen = h2.hed_numtrx(+)
+;

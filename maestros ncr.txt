@@ -1,0 +1,12 @@
+
+
+SELECT LPAD(m.cfg_valorparam,2,'0') cfg_valorparam
+                ,(LPAD(m.cfg_valorparam,2,'0')||' - '||m.cfg_descparam) cfg_descparam
+            FROM irs_configuraciones m
+            WHERE m.cfg_progid = 'MOTIVOCP';
+
+
+SELECT LPAD(m.cfg_valorparam,2,'0') cfg_valorparam
+                ,(LPAD(m.cfg_valorparam,2,'0')||' - '||m.cfg_descparam) cfg_descparam
+            FROM irs_configuraciones m
+            WHERE m.cfg_progid = 'MOTIVONC';

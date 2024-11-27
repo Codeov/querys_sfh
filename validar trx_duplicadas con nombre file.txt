@@ -1,0 +1,25 @@
+select a.fecha_proceso,cast(a.codigo_alterno as varchar(15)) codigo_alterno, cast(a.numero_terminal as int) numero_terminal,cast(a.numero_transaccion as int) numero_transaccion,a.nombre_file
+from (
+select * from val_file_cab a
+inner join [Retail_DW].dbo.Dim_Local b
+on  a.codigo_local= b.codigo_alterno ) a 
+inner join (select fecha_proceso,codigo_local,NUMERO_TERMINAL,NUMERO_TRANSACCION from Ticket_Duplicados group by fecha_proceso,codigo_local,NUMERO_TERMINAL,NUMERO_TRANSACCION) k
+on a.fecha_proceso=k.FECHA_PROCESO and a.codigo_sap=k.CODIGO_LOCAL and 
+a.numero_terminal=k.NUMERO_TERMINAL and a.numero_transaccion=k.NUMERO_TRANSACCION
+order by 2,3,4 asc;
+
+version II: 
+
+select a.fecha_proceso,cast(a.codigo_alterno as varchar(15)) codigo_alterno, cast(a.numero_terminal as int) numero_terminal,cast(a.numero_transaccion as int) numero_transaccion
+,substring(a.nombre_file,
+charindex('\Ticket_Cabecera',a.nombre_file,1)+1,
+len(a.nombre_file)-
+charindex('\Ticket_Cabecera',a.nombre_file,1)) nombre_file
+from (
+select * from val_file_cab a
+inner join [Retail_DW].dbo.Dim_Local b
+on  a.codigo_local= b.codigo_alterno ) a 
+inner join (select fecha_proceso,codigo_local,NUMERO_TERMINAL,NUMERO_TRANSACCION from Ticket_Duplicados group by fecha_proceso,codigo_local,NUMERO_TERMINAL,NUMERO_TRANSACCION) k
+on a.fecha_proceso=k.FECHA_PROCESO and a.codigo_sap=k.CODIGO_LOCAL and 
+a.numero_terminal=k.NUMERO_TERMINAL and a.numero_transaccion=k.NUMERO_TRANSACCION
+order by 2,3,4 asc;

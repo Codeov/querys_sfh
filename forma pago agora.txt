@@ -1,0 +1,23 @@
+SELECT c.dato_f2,c.codigo_local,c.codigo_cajera,b.codigo_medio_pago,b.descripcion_medio_pago,b.descripcion_tipo_medio_Pago
+,sum(a.importe_pago_bruto) importe_pago_bruto,sum(c.venta_bruta) venta_bruta,sum(c.venta_neta) venta_neta,sum(c.cantidad_trx) cantidad_trx
+ FROM `sistemas-bi.SPSA.int_fact_forma_pago` a
+inner join (select a.dato_f2,a.codigo_local,a.numero_terminal,a.numero_transaccion,a.codigo_cajera,sum(a.venta_bruta) venta_bruta,sum(a.venta_neta) venta_neta,count(distinct(a.id_ticket)) cantidad_trx  from `sistemas-bi.SPSA.int_fact_ticket` a
+where  a.dato_f2= '2022-11-08' and a.codigo_local = 'P195' group by  a.dato_f2,a.codigo_local,a.numero_terminal,a.numero_transaccion,a.codigo_cajera
+) c
+on a.codigo_local = c.codigo_local and a.fecha=c.dato_f2 and a.numero_terminal = c.numero_terminal and a.numero_transaccion = c.numero_transaccion
+inner join `sistemas-bi.SPSA.dim_medio_pago` b
+on cast(a.codigo_medio_pago as int64) =b.codigo_medio_pago
+WHERE a.fecha = '2022-11-08'  and 
+a.codigo_local= 'P195' and 
+b.codigo_medio_pago in (12,13,9,62,61)
+group by  c.dato_f2,c.codigo_local,c.codigo_cajera,b.codigo_medio_pago,b.descripcion_medio_pago,b.descripcion_tipo_medio_Pago;
+
+---venta de tarjeta agora
+select a.dato_f2,a.codigo_local,a.numero_terminal,a.numero_transaccion,a.codigo_cajera,sum(a.venta_bruta) venta_bruta,sum(a.venta_neta) venta_neta,count(distinct(a.id_ticket)) cantidad_trx  from `sistemas-bi.SPSA.int_fact_ticket` a
+where  a.dato_f2 between '2022-01-01' and '2022-11-10' and a.codigo_local = 'P195'
+and a.codigo_producto = '00020197814' 
+group by  a.dato_f2,a.codigo_local,a.numero_terminal,a.numero_transaccion,a.codigo_cajera;
+
+
+particionar tabla fact_agora
+nuevo campo: venta bruta 

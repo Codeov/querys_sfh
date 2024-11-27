@@ -1,0 +1,48 @@
+/*create table `spsa-sistemasbi-powerbi.BI_Powerbi.prd`
+(
+  id int64,
+  nombre string
+)*/
+begin transaction;
+create temp table productos 
+as
+  select * from (select '1' id,'celular' nombre union all 
+  select '2' id,'computadora' nombre);
+
+merge `spsa-sistemasbi-powerbi.BI_Powerbi.prd` a 
+using productos b
+on cast(a.id  as string) = b.id
+when not matched then 
+insert (id,nombre)
+values (cast(b.id as int64),b.nombre)
+when matched then 
+update set nombre = b.nombre;
+drop table productos;
+commit transaction;
+
+
+/*begin
+  begin transaction;
+  insert into `spsa-sistemasbi-powerbi.BI_Powerbi.prd` 
+  select 3,'impresora';
+  commit transaction;
+  exception when error then 
+  select @@error.message;
+  rollback transaction;
+end;*/
+
+  /*create table `spsa-sistemasbi-powerbi.BI_Powerbi.prd` 
+  as
+  (
+  select 3 id,'impresora' nombre)*/
+
+
+--crear una tabla particionada por fecha 
+/*create table `spsa-sistemasbi-powerbi.BI_Powerbi.prd`
+partition by fecha 
+as
+(select cast('2022-09-19' as date) fecha, '0001' product_id ,'impresora' nombre)*/
+
+
+
+

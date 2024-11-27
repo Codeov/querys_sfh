@@ -1,0 +1,103 @@
+begin
+
+declare @id_min int;
+declare @id_max int;
+declare @id_act int;
+
+ declare @v_m varchar(50);
+ declare @v_m_t varchar(50);
+ declare @v_n_m_t varchar(2);
+ declare @y varchar (4);
+
+ set @y ='2023';
+
+select distinct(substring(nom_file,
+       charindex('_',nom_file,
+         charindex('_',nom_file,1)+1)+1,
+                                                         (charindex('_',nom_file,
+                                                                                    charindex('_',nom_file,
+                                                                                                        charindex('_',nom_file,1)+1)+1))
+    -(charindex('_',nom_file,
+                                charindex('_',nom_file,1)+1)+1))) mes    
+   into #tmp_cloud_ecom
+   from tmp_cloud_ecom group by nom_file order by 1 asc;
+
+select row_number() over (order by mes asc) id,a.* into #id from #tmp_cloud_ecom a;
+
+set @id_min = (select min(a.id) from #id a );
+
+set @id_max = (select max(a.id) from #id a );
+
+truncate table cloud_ecom;
+
+	while @id_min <= @id_max 
+	begin
+
+	set @v_m = (select mes from #id where id =@id_min)
+	set @v_m_t = (select UPPER(LEFT(@v_m, 1)) + LOWER(SUBSTRING(@v_m, 2, LEN(@v_m))));
+
+	set @v_n_m_t =(select case when @v_m_t = 'Enero' then '01'
+         when @v_m_t = 'Febrero' then '02'
+		   when @v_m_t = 'Marzo' then '03'
+		   when @v_m_t = 'Abril' then '04'
+		   when @v_m_t = 'Mayo' then '05'
+		   when @v_m_t = 'Junio' then '06'
+		   when @v_m_t = 'Julio' then '07'
+		   when @v_m_t = 'Agosto' then '08'
+		   when @v_m_t = 'Septiembre' then '09'
+		   when @v_m_t = 'Octubre' then '10'
+		   when @v_m_t = 'Noviembre' then '11'
+		   else '12' end) 
+
+     select fecha,cod_tda,cod_linea,nom_file,nom_hoja,monto
+ into #tmp_cloud_ecom2
+ from 
+ (
+ select   cod_linea,cod_tda,nom_file,nom_hoja,monto_dia_1 , monto_dia_2 , monto_dia_3 , monto_dia_4 , monto_dia_5 , monto_dia_6 , monto_dia_7 , monto_dia_8 , monto_dia_9 , monto_dia_10 , monto_dia_11 , monto_dia_12 , monto_dia_13 , monto_dia_14 , monto_dia_15 , monto_dia_16 , monto_dia_17 , monto_dia_18 , monto_dia_19 , monto_dia_20 , monto_dia_21 , monto_dia_22 , monto_dia_23 , monto_dia_24 , monto_dia_25 , monto_dia_26 , monto_dia_27 , monto_dia_28 , monto_dia_29 , monto_dia_30 , monto_dia_31 
+ from tmp_cloud_ecom where nom_hoja not like  '%xlnm#_FilterDatabase' and nom_file like '%'+@v_m+'%') p
+ unpivot 
+  (monto for fecha in 
+   (monto_dia_1 , monto_dia_2 , monto_dia_3 , monto_dia_4 , monto_dia_5 , monto_dia_6 , monto_dia_7 , monto_dia_8 , monto_dia_9 , monto_dia_10 , monto_dia_11 , monto_dia_12 , monto_dia_13 , monto_dia_14 , monto_dia_15 , monto_dia_16 , monto_dia_17 , monto_dia_18 , monto_dia_19 , monto_dia_20 , monto_dia_21 , monto_dia_22 , monto_dia_23 , monto_dia_24 , monto_dia_25 , monto_dia_26 , monto_dia_27 , monto_dia_28 , monto_dia_29 , monto_dia_30 , monto_dia_31)
+ ) as q;
+ 
+
+
+insert into cloud_ecom
+
+  select @y+'-'+@v_n_m_t+'-'+case when len(ltrim(rtrim(substring(a.fecha,charindex('_',a.fecha,charindex('_',a.fecha,1)+1)+1,len(a.fecha)-charindex('_',a.fecha,charindex('_',a.fecha,1)+1)))))=1
+   then '0'+ (ltrim(rtrim(substring(a.fecha,charindex('_',a.fecha,charindex('_',a.fecha,1)+1)+1,len(a.fecha)-charindex('_',a.fecha,charindex('_',a.fecha,1)+1)))))
+   else 
+   ltrim(rtrim(substring(a.fecha,charindex('_',a.fecha,charindex('_',a.fecha,1)+1)+1,len(a.fecha)-charindex('_',a.fecha,charindex('_',a.fecha,1)+1)))) 
+   end fecha
+  ,a.cod_tda,a.cod_linea,
+  case when right(rtrim(a.nom_file),17)='margen_final.xlsx' then 'M'
+  ELSE 'V' end origen,
+  CASE when ltrim(rtrim(a.nom_hoja)) = 'Ecommerce$' then 'EC' 
+  else 'LM' end tipo_carga
+  ,a.monto  from #tmp_cloud_ecom2 a
+where a.nom_hoja not like  '%xlnm#_FilterDatabase' and a.nom_file like '%'+@v_m+'%';
+
+
+ drop table #tmp_cloud_ecom2;
+
+
+	--select @v_m,@v_m_t,@v_n_m_t;
+
+
+	
+	if @id_min=@id_max
+	begin 
+	drop table #tmp_cloud_ecom;
+    drop table #id;
+		break;
+	end;
+	else 
+	begin
+	set @id_min = @id_min+1
+	end;
+
+	end ;
+
+
+
+end;

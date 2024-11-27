@@ -1,0 +1,5 @@
+bq mk --external_table_definition=FECHA:STRING,CODIGO_LOCAL:INTEGER,CODIGO_CAJERO:INTEGER,CODIGO_TRABAJADOR:STRING,CANT_TICKETS_RF:INTEGER,CANT_LINEAS_RF:INTEGER,CANT_UNIDADES_RF:INTEGER,VENTA_TOTAL_RF:FLOAT@CSV=gs://kpicm_cajas/diario/ticket_cajero_rf.csv spsa-operaciones-prd:calidad_transaccional.Kpicm_stage_cajas_rf
+
+
+
+

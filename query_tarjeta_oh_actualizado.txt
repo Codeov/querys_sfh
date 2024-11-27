@@ -1,0 +1,64 @@
+with tarjeta_oh as (select /*+ INDEX(b) */  pp.pag_fcontable fecha,
+                pp.hed_local local,
+                pp.hed_pos cajero,
+                pp.hed_numtrx numero_transaccion,
+                pp.pag_monto monto_toh,
+                nvl(pp.pag_nrocuotas, 0) numero_cuotas,
+                b.ptr_vendedor cod_vendedor,
+                pp.pag_tipopago id_tipo_pago,
+                'TARJETA OH' desc_tipo_pago,
+                row_number() over(partition by pp.hed_fechatrx,pp.hed_local,pp.hed_pos,pp.hed_numtrx,pp.pag_monto,b.ptr_vendedor order by pp.hed_fechatrx ) ord
+               from  ctx_pagos_trx pp inner join ctx_productos_trx b
+ on b.HED_PAIS = PP.HED_PAIS
+   AND b.HED_ORIGENTRX = PP.HED_ORIGENTRX
+   AND b.HED_LOCAL = PP.HED_LOCAL
+   AND b.HED_POS = PP.HED_POS
+   AND b.HED_NUMTRX = PP.HED_NUMTRX
+   AND b.HED_FECHATRX = PP.HED_FECHATRX
+   AND b.HED_HORATRX = PP.HED_HORATRX 
+ WHERE
+ pp.pag_fcontable = to_date('2022-05-01', 'YYYY-MM-DD')
+ and pp.hed_local in (select /*+ INDEX(a) */ a.COD_LOCAL from mae_proceso_local a where a.cod_proceso = 17 and a.tip_estado = 'A')
+ and pp.pag_tipotrx ='PVT'
+ and pp.pag_tipodoc <> 'NCR'
+ and pp.pag_tipopago IN ('08','19','28', '29')
+ --and pp.pag_anulado = 'N'
+ --and b.ptr_anulado = 'N'
+ and b.ptr_vendedor is not null
+ and b.ptr_vendedor <> lpad(b.hed_local,10,0)
+ UNION ALL
+ select /*+ INDEX(b) */  pp.pag_fcontable fecha,
+                pp.hed_local local,
+                pp.hed_pos cajero,
+                pp.hed_numtrx numero_transaccion,
+                pp.pag_monto monto_toh,
+                nvl(pp.pag_nrocuotas, 0) numero_cuotas,
+                b.ptr_vendedor cod_vendedor,
+                pp.pag_tipopago id_tipo_pago,
+                'TARJETA OH' desc_tipo_pago,
+                row_number() over(partition by pp.hed_fechatrx,pp.hed_local,pp.hed_pos,pp.hed_numtrx,pp.pag_monto,b.ptr_vendedor order by pp.hed_fechatrx ) ord
+               from  ctx_pagos_trx pp inner join ctx_productos_trx b
+ on b.HED_PAIS = PP.HED_PAIS
+   AND b.HED_ORIGENTRX = PP.HED_ORIGENTRX
+   AND b.HED_LOCAL = PP.HED_LOCAL
+   AND b.HED_POS = PP.HED_POS
+   AND b.HED_NUMTRX = PP.HED_NUMTRX
+   AND b.HED_FECHATRX = PP.HED_FECHATRX
+   AND b.HED_HORATRX = PP.HED_HORATRX 
+ WHERE
+ pp.pag_fcontable = to_date('2022-05-01', 'YYYY-MM-DD')
+ and pp.hed_local in (select /*+ INDEX(a) */ a.COD_LOCAL from mae_proceso_local a where a.cod_proceso = 17 and a.tip_estado = 'A')
+ and pp.pag_tipotrx ='PVT'
+ and pp.pag_tipodoc = 'NCR'
+ and pp.pag_tipopago IN ('08','29')
+ --and pp.pag_anulado = 'N'
+ --and b.ptr_anulado = 'N'
+ and b.ptr_vendedor is not null
+ and b.ptr_vendedor <> lpad(b.hed_local,10,0)
+ 
+ )
+ 
+ select b.fecha,b.local,b.cajero,b.numero_transaccion,sum(b.monto_toh) monto_toh,b.numero_cuotas,b.cod_vendedor,b.id_tipo_pago,b.desc_tipo_pago
+ from tarjeta_oh b
+ where ord=1 
+ group by b.fecha,b.local,b.cajero,b.numero_transaccion,b.numero_cuotas,b.cod_vendedor,b.id_tipo_pago,b.desc_tipo_pago

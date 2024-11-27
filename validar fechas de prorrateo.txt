@@ -1,0 +1,4 @@
+ select a.hed_fcontable,a.hed_local,a.hed_pos,a.hed_numtrx,a.chq_f_prordescto FROM ctx_header_trx_chequeo a
+ where a.hed_fcontable = '24-12-2022'
+ and a.hed_local= 114 
+order by 5 desc; 

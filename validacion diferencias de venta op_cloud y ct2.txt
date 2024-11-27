@@ -1,0 +1,34 @@
+**********************op
+select a.fecha,replace(substring(cast (sum(monto_ct) as varchar),1,CHARINDEX('.',cast(sum(monto_ct) as varchar),1)+2),'.',',') monto_ct
+,replace(sum(monto_op),'.',',') monto_op,
+replace((sum(monto_ct)-Sum(monto_op)),'.',',')Monto_dif from [dbo].[repro_tabla_fecha_ct_op] a inner join [dbo].[repro_tabla_fecha_OP] b
+on a.fecha=b.fecha
+group by a.fecha;
+
+select * from tmp_Interfaces_Diario_Lista_Reproceso_OP
+;
+
+
+**********************nube
+
+select a.fecha,replace(substring(cast (sum(a.monto_ct) as varchar),1,CHARINDEX('.',cast(sum(a.monto_ct) as varchar),1)+2),'.',',') monto_ct,
+replace(sum(b.monto_dlk),'.',',') monto_dlk,
+replace((sum(a.monto_ct)-Sum(b.monto_dlk)),'.',',')Monto_dif
+from [dbo].[repro_tabla_fecha_ct_dlk] a inner join(select a.fecha, sum(a.monto_dlk)monto_dlk from  [dbo].[repro_fecha_local_dlk] a
+group by a.fecha) b
+on a.fecha=b.fecha
+group by a.fecha;
+
+select * from tmp_Interfaces_Diario_Lista_Reproceso_MOD
+order by estado desc;
+
+
+
+----------------------------
+----------------------------
+
+select cast(a.Fecha_Proceso as date) Fecha_Proceso ,sum(convert(decimal(20,7),a.Venta_Neta)) Venta_Neta
+from txt_Ticket_Cabecera_CT2 a
+where a.Codigo_Tipo_Transaccion ='PVT'
+and a.Codigo_Tipo_Doc_Trx  IN ('BLT','TFC','NCR')
+group by a.Fecha_Proceso;

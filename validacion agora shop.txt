@@ -1,0 +1,73 @@
+select a.hed_local,
+sum(a.hed_brutopos + a.hed_brutoneg - nvl(a.hed_impuesto,0)- nvl(a.hed_impuesto_isc,0)) venta_neta
+ from ctx_header_trx a 
+where a.hed_fcontable between '05-03-2023' and '05-03-2023'
+and substr(ltrim(rtrim(a.hed_cnegop)),1,3) = '218'
+and a.hed_local = 10
+group by a.hed_local;  --10385.06 
+
+select a.hed_local,
+sum(a.hed_brutopos + a.hed_brutoneg - nvl(a.hed_impuesto,0)- nvl(a.hed_impuesto_isc,0)) venta_neta
+ from ctx_header_trx a 
+where a.hed_fcontable between '05-03-2023' and '05-03-2023'
+and a.hed_tipoventa = '1'
+and a.hed_local = 10
+group by a.hed_local; --8651.54
+
+select a.* from (
+select a.hed_local,a.hed_pos,a.hed_numtrx,
+sum(a.hed_brutopos + a.hed_brutoneg - nvl(a.hed_impuesto,0)- nvl(a.hed_impuesto_isc,0)) venta_neta
+ from ctx_header_trx a 
+where a.hed_fcontable between '05-03-2023' and '05-03-2023'
+and substr(ltrim(rtrim(a.hed_cnegop)),1,3) = '218'
+and a.hed_local = 10
+group by a.hed_local,a.hed_pos,a.hed_numtrx) a 
+left join (
+  select a.hed_local,a.hed_pos,a.hed_numtrx,
+  sum(a.hed_brutopos + a.hed_brutoneg - nvl(a.hed_impuesto,0)- nvl(a.hed_impuesto_isc,0)) venta_neta
+   from ctx_header_trx a 
+  where a.hed_fcontable between '05-03-2023' and '05-03-2023'
+  and a.hed_tipoventa = '1'
+  and a.hed_local = 10
+  group by a.hed_local,a.hed_pos,a.hed_numtrx) b 
+on a.hed_local=b.hed_local and a.hed_pos=b.hed_pos and a.hed_numtrx=b.hed_numtrx
+where b.hed_local is null;
+
+select b.* from (
+select a.hed_local,a.hed_pos,a.hed_numtrx,
+sum(a.hed_brutopos + a.hed_brutoneg - nvl(a.hed_impuesto,0)- nvl(a.hed_impuesto_isc,0)) venta_neta
+ from ctx_header_trx a 
+where a.hed_fcontable between '05-03-2023' and '05-03-2023'
+and substr(ltrim(rtrim(a.hed_cnegop)),1,3) = '218'
+and a.hed_local = 10
+group by a.hed_local,a.hed_pos,a.hed_numtrx) a 
+right join (
+  select a.hed_local,a.hed_pos,a.hed_numtrx,
+  sum(a.hed_brutopos + a.hed_brutoneg - nvl(a.hed_impuesto,0)- nvl(a.hed_impuesto_isc,0)) venta_neta
+   from ctx_header_trx a 
+  where a.hed_fcontable between '05-03-2023' and '05-03-2023'
+  and a.hed_tipoventa = '1'
+  and a.hed_local = 10
+  group by a.hed_local,a.hed_pos,a.hed_numtrx) b 
+on a.hed_local=b.hed_local and a.hed_pos=b.hed_pos and a.hed_numtrx=b.hed_numtrx
+where a.hed_local is null;
+
+
+select a.hed_tipoventa,a.hed_cnegop from ctx_header_trx a where 
+a.hed_fcontable between '05-03-2023' and '05-03-2023' and a.hed_local=10 and a.hed_pos = 35 and a.hed_numtrx=6667; 
+
+
+
+select a.hed_local,a.hed_pos,a.hed_numtrx,a.hed_tipoventa,a.hed_cnegop,a.* from ctx_header_trx a where 
+a.hed_fcontable between '05-03-2023' and '05-03-2023' and a.hed_local=10 and a.hed_pos = 26 and a.hed_numtrx=2267
+union all
+select a.hed_local,a.hed_pos,a.hed_numtrx,a.hed_tipoventa,a.hed_cnegop,a.* from ctx_header_trx a where 
+a.hed_fcontable between '05-03-2023' and '05-03-2023' and a.hed_local=10 and a.hed_pos = 2 and a.hed_numtrx=5541;
+
+
+
+
+
+
+
+

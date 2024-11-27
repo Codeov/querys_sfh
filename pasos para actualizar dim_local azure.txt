@@ -1,0 +1,67 @@
+actualizar dim_local : 
+
+1.a d.l op
+2.a d.l sb
+3.a d. pb 
+   
+  CREATE OR REPLACE PROCEDURE `spsa-sistemasbi-powerbi.BI_SP.powerbi_dimensiones`()
+
+  Merge `spsa-sistemasbi-powerbi.BI_Powerbi.dim_local` a using
+(SELECT local_id id_local, codigo_local,codigo_cebe,codigo_alterno,nombre_compania,director, orden_formato_compania,formato,ubicacion,estado,fecha_apertura,fecha_cierre,
+fecha_inicio_venta,fecha_inicio_sss,nombre,cluster,cluster_nse,supervisor,regional,zona_1,tipo_local,tipo_sss,latitud,longitud,zona_3,metros_cuadrados,fecha_sss,
+fecha_creacion,fecha_actualizacion,sss_activo,ordenformato,flag_quiebre_local,
+zona_2, cluster_comercial,cluster_nse_comercial,activo_en_surtido,departamento,distrito provincia,fecha_migracion,codigo_ofiplan FROM `sistemas-bi.SPSA.dim_local`) b
+on ( a.codigo_local = b.codigo_local)
+WHEN NOT MATCHED THEN
+INSERT (id_local, codigo_local,codigo_cebe,codigo_alterno,nombre_compania,director, orden_formato_compania,formato,ubicacion,estado,fecha_apertura,fecha_cierre,
+fecha_inicio_venta,fecha_inicio_sss,nombre,cluster,cluster_nse,supervisor,regional,zona_1,tipo_local,tipo_sss,latitud,longitud,zona_3,metros_cuadrados,fecha_sss,
+fecha_creacion,fecha_actualizacion,sss_activo,ordenformato,flag_quiebre_local,
+zona_2, cluster_comercial,cluster_nse_comercial,activo_en_surtido,departamento,provincia,fecha_migracion,codigo_ofiplan)
+VALUES (b.id_local, b.codigo_local,b.codigo_cebe,b.codigo_alterno,b.nombre_compania,b.director, b.orden_formato_compania,b.formato,b.ubicacion,b.estado,b.fecha_apertura,
+b.fecha_cierre,b.fecha_inicio_venta,b.fecha_inicio_sss,b.nombre,b.cluster,b.cluster_nse,b.supervisor,b.regional,b.zona_1,b.tipo_local,b.tipo_sss,b.latitud,b.longitud,b.zona_3,
+b.metros_cuadrados,b.fecha_sss,b.fecha_creacion,b.fecha_actualizacion,b.sss_activo,b.ordenformato,b.flag_quiebre_local,
+b.zona_2, b.cluster_comercial,b.cluster_nse_comercial,b.activo_en_surtido,b.departamento,b.provincia,b.fecha_migracion,b.codigo_ofiplan)
+WHEN MATCHED THEN 
+UPDATE SET a.id_local = b.id_local,
+a.codigo_local = b.codigo_local,
+a.codigo_cebe = b.codigo_cebe,
+a.codigo_alterno = b.codigo_alterno,
+a.nombre_compania = b.nombre_compania,
+a.director = b.director, 
+a.orden_formato_compania = b.orden_formato_compania,
+a.formato = b.formato,
+a.ubicacion = b.ubicacion,
+a.estado = b.estado,
+a.fecha_apertura = b.fecha_apertura,
+a.fecha_cierre = b.fecha_cierre,
+a.fecha_inicio_venta = b.fecha_inicio_venta,
+a.fecha_inicio_sss = b.fecha_inicio_sss,
+a.nombre = b.nombre,
+a.cluster = b.cluster,
+a.cluster_nse = b.cluster_nse,
+a.supervisor = b.supervisor,
+a.regional = b.regional,
+a.zona_1 = b.zona_1,
+a.tipo_local = b.tipo_local,
+a.tipo_sss = b.tipo_sss,
+a.latitud = b.latitud,
+a.longitud = b.longitud,
+a.zona_3 = b.zona_3,
+a.metros_cuadrados = b.metros_cuadrados,
+a.fecha_sss = b.fecha_sss,
+a.fecha_creacion = b.fecha_creacion,
+a.fecha_actualizacion = b.fecha_actualizacion,
+a.sss_activo = b.sss_activo,
+a.ordenformato = b.ordenformato,
+a.flag_quiebre_local = b.flag_quiebre_local,
+a.zona_2 = b.zona_2, 
+a.cluster_comercial = b.cluster_comercial,
+a.cluster_nse_comercial = b.cluster_nse_comercial,
+a.activo_en_surtido = b.activo_en_surtido,
+a.departamento = b.departamento,
+a.provincia = b.provincia,
+a.fecha_migracion = b.fecha_migracion,
+a.codigo_ofiplan = b.codigo_ofiplan;
+
+4. correr shell (35) para generar los archivos dimensiones (D:\Cloud\SPSA\powerbi\dimensiones\scripts\powerbi_generacion_csv_dimensiones.ps1)
+5. correr pipe : pipe_dimensiones/pipe_sql_dim_local

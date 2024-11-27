@@ -1,0 +1,22 @@
+--estructura de funciones temporales
+
+CREATE TEMP FUNCTION AddFourAndDivide(x INT64, y INT64)
+RETURNS FLOAT64
+AS (
+  (x + 4) / y
+);
+
+SELECT
+  val, AddFourAndDivide(val, 2)
+FROM
+  UNNEST([2,3,5,8]) AS val;
+
+------------------------------------------------
+create temp function dividir (x int64,y int64)
+returns float64
+as
+(
+ x/y);
+
+select 'resultado',dividir(10,5);
+--------------------------------------------------

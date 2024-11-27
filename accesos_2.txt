@@ -1,0 +1,225 @@
+--------------Acceso al SCTRX2 para registrar los locales  en las siguientes interfaces de CT2-------------------
+Link: http://172.22.15.37/SCTRX2W/Account/frmLogin.aspx
+Usuario:DESPINOZA
+Clave:DESPINOZA1
+--------------Acceso al SCTRX WEB----------------
+http://sctrx:8090/Account/Login.aspx (Link al sctrx)
+User:mcabrera
+Pass:123456
+
+http://10.20.16.24:8096/Account/Login.aspx(Link al reporte de)
+User:mcabrera
+Pass:123456
+
+--------------Acceso a Facturas o Boletas Electronicas--
+
+http://spprdfpplpos:8080/Facturacion/login.jsp
+
+Ruc: 20100070970
+Usuario: admin
+Clave: abc123
+--------------Acceso al COMR---------------------
+User:usr_pibanez
+pass:Spsa2016
+--------------Acceso Clifre- PRD-----------------------
+SAP_CLIFRE/SAP$538188@CLIFRE
+
+SERVIDOR: CLIFRE
+Usuario: SAP_CLIFRE
+password: SAP$538188
+
+--------------Acceso Clifre--DEV--------------------
+SERVIDOR: QA_CLIFRE
+Usuario: CLIFRE
+password: ORACLE
+
+--------------Acceso al CT1----------------------
+SCTSP/SDXXVT89@SPT02
+--------------Acceso al CT1 Desarrollo-------------
+Host:     172.22.14.25
+User:     operspsa
+Pass:     spsa1
+--------------Acceso al CT2-----------------------
+SXCT2SP/CT2remiX@SPT03
+
+SXCT2SP ---Esquema para consulta
+EXCT2SP ---Esquema es para crear objetos
+
+--------------Acceso al CT2 QA----------------------
+EXCT2SP/oracleperu@SPT02Q
+IP:10.20.11.39
+*Para ingresar al Winscp usa estas credenciales:
+ Usuario = operbbr
+ Password = operbbr2016
+
+-------------------------------------
+El 10.20.11.51 es ambiente QA de CT
+
+
+--------------Acceso al SQL BCT--------------------------
+Host: 10.20.11.13\sqlspsav2
+User: sop_bct_spsa
+Pass: Bct2016$
+
+------------------------Venta Linea----------------
+190.216.178.134:8091
+http://ventaenlinea.spsa.pe:8091
+Usuario:SP43226415
+Clave  :43226415
+***********************Acceso a  la base datos para la venta Linea**********
+user:ectsp
+pass:Lima2017
+BD:SPT03
+
+
+------------------------Transaccion Adriana Hoyos----
+
+ZFI_MONVEN_OPT - Monitor Cuadratura de Ventas
+
+-----------------Putty -----------WINSCP------
+10.20.11.11:22
+usuario: oper_pro                
+clave: Spsa2032$
+
+User:     moni_pro
+Pass :    SR1939607
+
+---Comando para revisar la Shell---------
+crontab –l
+-----------------Acceso al Link Monitor RS-------------
+http://10.20.11.71:8080/IRSMonitorct-sp/webapp/LogonForm?code=2  (Produccion)
+http://10.20.11.39:8080/IRSMonitorct-sp/webapp/LogonForm?code=2  (QA)
+Usuario :Piero
+Password:12345
+
+----------------------Acceso a los reportes de PMM desde JSATELITE--------------
+Nombre	Usuario	Clave
+Carlos Infante	SP07236552	spsa2020
+Isabel Quezada	SP42383291	spsa2020
+Marlon Cabrera	SP40463074	spsa2020
+-----------------------------Acceso a PMM------------------
+SINTERFACE/SF5590X@SPT01
+
+-----------------------Validar CT2 VS Cubos
+ejecuta las consultas 29.STG_Carga_Validacion_DW y el reporte es : 
+
+http://irprdf0018/ReportServer/Pages/ReportViewer.aspx?%2fProyecto_RRSS_Validacion_DW%2fReporte_Validacion&rs:Command=Render
+
+------------------------------CEM / COUPONS  (Base de datos SQL Server) QA--------------------------
+10.20.12.25\IRWIT01
+admcemdes
+Tk1ll3rs
+
+------------------------------CEM / COUPONS  (Base de datos SQL Server) PRD--------------------------
+10.20.11.14\IRWIT01
+sop_cem
+Cem2016#
+--------------------------------Acceso al Sistema de Seguridad-via web-------------
+http://10.20.11.12:8080/SegurSP/index
+
+Usuario:
+Clave  :
+------------------------------------Nota-------------
+Tabla: V_ISCPROD (esquena EINTERFACE del SPT01) que es de PMM
+Shell:. $HOME/.profile; $HOME_BATCH/interfaces/ct2sp/procesos/ksh/sp_ct2_hilos_cargaTrxCTX2PMM.ksh  20180901
+------------------------Acceso a la base datos Comisiones-----------
+usuario:EXCOMSP
+Clave: K4iosabiCO
+------------------------Acceso al reporte de comisiones------------
+Link:http://10.20.16.24:8096/Account/Login.aspx
+Usuario: cinfante
+Clave:CINFANTE1234
+---------- CUPONES EMITIDOS y COLABORADOR  -------------------
+
+
+Como te comenté la BD del Cupones no es Oracle, sino SQL Server.
+
+
+Esta es la IP: 10.20.11.14\IRWIT01
+
+Y la BD es: Coupons
+
+
+Producción
+
+Usuario: sel_bi 
+
+Clave: BI2015#
+
+
+
+----------- DP PROMOCION ----------------------------------
+
+
+10.20.12.100
+
+
+BD:                  ncr_dpc4
+
+User:                user_bi
+
+Password:         userbi
+
+ 
+
+
+-------- VALES PAVO ----------------------------
+SERVIDO: CLIFRE
+Usuario: SAP_CLIFRE
+password: SAP$538188
+-----------------------Credenciales MBO QA ---------
+eapiccare/qaapi2020@SPT04Q
+
+eibi/qa8080 --Crear los objetos 
+sibi/qa4012 --Integracion lo Invoque con su proceso
+SPT04Q =
+
+(DESCRIPTION =
+
+(ADDRESS_LIST =
+
+(ADDRESS = 
+(PROTOCOL = TCP)(PORT = 1521)(HOST = 10.30.7.16))
+)
+ 
+(CONNECT_DATA =
+      (SID = SPT04Q)
+)
+)
+
+
+---grant all on eibi.pkg_ecommerce_bi to sibi (Ejecutar en el ambiente de eibi)
+---grant execute on eibi.pkg_ecommerce_bi to sibi (Ejecutar en el ambiente de eibi)
+---create synonym pkg_ecommerce_bi for eibi.pkg_ecommerce_bi(Ejecutar en el ambiente sibi)
+----------------------Credenciales MBO PRD TEMPORAL-----
+usrtmpbi/mb0fEr20@SPT04 -- Eliminaron el usuario
+carga_cloud_bi/C0mj3TG23#@SPT04 --Crearon nuevo usuario para BI
+
+SPT04=
+  (DESCRIPTION=
+    (ADDRESS=
+      (PROTOCOL=TCP)
+      (HOST=10.30.4.21)
+      (PORT=1531)
+    )
+    (CONNECT_DATA=
+      (SID=SPT04)
+    )
+  )
+        
+---------------------------PMM QA--------------------
+BD: SPT01Q
+User: SINTERFACE
+Password: DESA01
+
+Cadena:
+
+SPT01Q =
+  (DESCRIPTION =
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = 10.20.11.10)(PORT = 1550))
+    )
+    (CONNECT_DATA =
+      (SERVICE_NAME = SPT01Q)
+    )
+  )

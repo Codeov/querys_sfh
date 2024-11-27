@@ -1,0 +1,383 @@
+--USE [Retail_DW]
+--GO
+--/****** Object:  StoredProcedure [dbo].[DW_Rpt_Abarrotes_Reposicion_Proyeccion]    Script Date: 29/05/2023 13:09:26 ******/
+--SET ANSI_NULLS ON
+--GO
+--SET QUOTED_IDENTIFIER ON
+--GO
+--ALTER PROCEDURE [dbo].[DW_Rpt_Abarrotes_Reposicion_Proyeccion] --'2022-02-14','P195','07:00','14:00','SI'
+--@Fecha DATE,
+--@Local VARCHAR(10),
+--@Hora_Inicio VARCHAR(20),
+--@Hora_Fin VARCHAR(20),
+--@estado varchar(50),
+--@TIPO VARCHAR(50)
+
+--AS 
+BEGIN
+
+ declare  @Fecha DATE
+declare @Local VARCHAR(10)
+declare @Hora_Inicio VARCHAR(20)
+declare @Hora_Fin VARCHAR(20)
+declare @estado varchar(50)
+declare @TIPO VARCHAR(50)
+
+set @Fecha = '2023-05-17';
+set @Local = 'P048';
+set @Hora_Inicio = '13:00'
+set @Hora_Fin = '23:00'
+set @estado = 'NO'
+set @TIPO = 'Baja'
+
+
+	
+
+
+	/*
+	(12:00 - 45) 11:15 < 10 --sigo el proceso normal sin proyeccion 7:00 a 10:00
+	hora actual - 45 < hora fin
+
+	12:00 - 45 11:15 < 14 -- venta real 7 a 11:15 / 11:15 a 14:00 venta real + proyeccion
+
+	11:00 - 45 10:15 < 09
+	*/
+
+	declare @hora_actual VARCHAR(20) = --'18:45'
+	( select left(CONVERT(varchar(10),DATEADD(MINUTE, -45, left(CONVERT(varchar(10), GETDATE(), 108),5)), 108),5))
+
+
+declare @max_hora varchar(20) = 
+	(
+	
+select max(c.Minuto_Formato) Hora
+from Fact_Venta_Hora_Rp a 
+inner join Dim_Tiempo b on a.Tiempo_Key=b.Tiempo_Key
+inner join Dim_Hora c on a.Hora_Key=c.Hora_Key
+inner join dim_local d on a.Local_Key=d.Local_Key
+where b.fecha = @Fecha
+and d.Codigo_SAP = @Local
+
+	)
+
+	declare @min_hora varchar(20) = 
+	(
+	select 
+	case when @Hora_Inicio > @max_hora then @max_hora
+	when @Hora_Inicio <= @max_hora then @Hora_Inicio end Hora
+	)
+	
+	select a.*
+	into #Fact_Bulto
+	from 
+	(
+	SELECT Producto_Key, b.Codigo_Producto,EAN_Codigo_Barra as Cod_EAN ,b.Descripcion_Producto ,c.Nombre_Seccion,
+	Nombre_linea,Nombre_Familia, b.Unidad_Medida_Pedido as Medida,Equivalencia_Bulto Und_Medida
+	FROM  dbo.Dim_Producto b  INNER JOIN
+	dbo.Dim_Jerarquia_PMM c ON b.Jerarquia_PMM_Key = c.Jerarquia_PMM_Key
+	WHERE   c.Nombre_Division IN('ABARROTES')
+	
+	union all
+
+	SELECT Producto_Key, b.Codigo_Producto,EAN_Codigo_Barra as Cod_EAN ,b.Descripcion_Producto ,c.Nombre_Seccion,
+	Nombre_linea,Nombre_Familia, b.Unidad_Medida_Pedido as Medida,Equivalencia_Bulto Und_Medida
+
+	FROM  dbo.Dim_Producto b  INNER JOIN
+	dbo.Dim_Jerarquia_PMM c ON b.Jerarquia_PMM_Key = c.Jerarquia_PMM_Key
+	WHERE   c.Nombre_linea = 'MASCOTAS'
+	) as a;
+	
+
+	SELECT a.codigo_Sap,a.codigo_producto--,a.minuto_formato
+	,a.dia,sum(a.venta_unidad)/8 venta_unidad
+	into #venta_proyectada
+	FROM venta_proyectada_RpAbarrotes a
+	inner join #Fact_Bulto b on a.codigo_producto = b.Codigo_Producto
+	WHERE a.dia in (
+	CASE DATENAME(dw,@Fecha)
+     when 'Monday' then 'Lunes'
+     when 'Tuesday' then 'Martes'
+     when 'Wednesday' then 'Miercoles'
+     when 'Thursday' then 'Jueves'
+     when 'Friday' then 'Viernes'
+     when 'Saturday' then 'Sabado'
+     when 'Sunday' then 'Domingo'
+	END) and a.CODIGO_SAP = @Local
+	--and a.Codigo_Producto = '00000993908'
+	and a.Minuto_Formato between @Hora_Inicio and @Hora_Fin
+	group by a.codigo_Sap,a.codigo_producto--,a.minuto_formato
+	,a.dia
+
+	 
+	-----------------------------------------------------------------------------------------------------
+	if (CONVERT(varchar,GETDATE(),23)) = @Fecha
+	begin
+	SELECT CONVERT(DATE, Fecha) Fecha,Codigo_SAP,Nombre,a.codigo_proveedor,a.Nombre_Proveedor, Codigo_Producto,Cod_EAN,Descripcion_Producto ,
+	Nombre_Seccion,Nombre_linea,Nombre_Familia, 
+	SUM(Cantidad) Cantidad, (SUM(Cantidad) / Und_Medida) Bulto,Medida,(SUM(Stock_Unidad)-SUM(Cantidad) )Stock, 
+	  CASE WHEN (SUM(Stock_Unidad)-SUM(Cantidad))/Und_Medida > SUM(Cantidad)/ Und_Medida
+		   THEN SUM(Cantidad) / Und_Medida ELSE (SUM(Stock_Unidad)-SUM(Cantidad))/Und_Medida END Reponer  
+	  into #tablaF
+	  FROM
+		 (
+		 
+		 SELECT  b.Fecha,c.Codigo_SAP,c.Nombre ,j.Codigo_Producto,j.Cod_EAN,j.Descripcion_Producto,
+		 h.codigo_proveedor,h.Nombre_Proveedor,
+		 j.Nombre_Seccion,j.Nombre_linea,j.nombre_familia, j.Und_Medida,j.Medida,--SUM(a.Cantidad) vta_rp,max(k.venta_unidad) vtapry,
+		 (SUM(a.Cantidad)+max(k.venta_unidad)) Cantidad, 0 AS Stock_Unidad
+				  FROM  Fact_Venta_Hora_Rp a INNER JOIN
+								   dbo.Dim_Tiempo b ON a.tiempo_Key = b.Tiempo_Key INNER JOIN
+								   dbo.Dim_Local c ON a.Local_Key = c.Local_Key INNER JOIN
+								   dbo.Dim_Hora d ON a.Hora_Key = d.Hora_Key INNER JOIN 
+								   dbo.Fact_Proveedor_Producto_Local f ON a.Local_Key=f.Local_Key and a.Producto_Key=f.Producto_Key
+								   INNER JOIN dbo.Dim_Proveedor h ON f.Proveedor_Key=h.Proveedor_Key
+								   INNER JOIN #Fact_Bulto j ON a.Producto_Key=j.Producto_Key
+								   inner join #venta_proyectada k on j.Codigo_Producto=k.codigo_producto and k.codigo_sap=c.Codigo_SAP
+			   WHERE b.Fecha = @Fecha AND c.Codigo_SAP = @Local and d.Minuto_Formato between @min_hora and  @max_hora --@hora_fin
+			   GROUP BY b.Fecha,c.Codigo_SAP,h.codigo_proveedor,h.Nombre_Proveedor,j.Codigo_Producto,j.Cod_EAN,j.Descripcion_Producto,c.Nombre,
+			   j.Nombre_Seccion,j.Nombre_linea,j.Nombre_Familia,j.Und_Medida,j.Medida
+			   
+
+		  UNION ALL
+
+		   SELECT b.Fecha, c.Codigo_SAP,c.Nombre,d.Codigo_Producto, Cod_EAN,d.Descripcion_Producto,h.codigo_proveedor,h.Nombre_Proveedor,Nombre_Seccion,
+						Nombre_linea, Nombre_Familia,  Und_Medida,  Medida, 0 AS Cantidad, Stock_Unidad
+				  FROM  Fact_Stocks_Diario_Linea a INNER JOIN
+								   dbo.Dim_Tiempo b ON a.Tiempo_Key = b.Tiempo_Key INNER JOIN
+								   dbo.Dim_Local c ON a.Local_Key = c.Local_Key INNER JOIN
+								   #Fact_Bulto d ON a.Producto_Key=d.Producto_Key INNER JOIN
+								   dbo.Fact_Proveedor_Producto_Local f ON a.Local_Key=f.Local_Key AND a.Producto_Key=f.Producto_Key
+								   INNER JOIN dbo.Dim_Proveedor h ON f.Proveedor_Key=h.Proveedor_Key
+			   WHERE  b.Fecha = @Fecha AND c.Codigo_SAP = @Local AND Flag_Disponible = 1 
+			   ) a
+	GROUP BY Fecha, Codigo_SAP,Nombre,a.codigo_proveedor,a.Nombre_Proveedor,Codigo_Producto,Cod_EAN,Descripcion_Producto, 
+	Nombre_Seccion,Nombre_linea,Nombre_Familia,Medida,a.Und_Medida
+	HAVING   SUM(Cantidad) > 0 AND ((SUM(Stock_Unidad) - SUM(Cantidad)) / Und_Medida) >= 0.5;
+
+	select *,reponer reponer_demo,substring(cast(cast(reponer as numeric(10,2))%1 as varchar),3,1) reponer_condicion
+	into #tablaff
+	from
+	(
+	select *
+	from #tablaF
+	where Nombre_Seccion = 'CUIDADO PERSONAL'
+	and Bulto  >= 0.50
+
+	union all
+
+	select *
+	from #tablaF
+	where Nombre_Seccion <> 'CUIDADO PERSONAL'
+	and Bulto  >= 0.80
+	) as tb
+
+
+
+	update #tablaff
+	set reponer_demo = 
+	case 
+	when reponer_condicion >= 8 then CEILING(reponer_demo) else floor(reponer_demo)
+	end
+	where Nombre_Seccion <> 'CUIDADO PERSONAL'
+	
+
+	update #tablaff
+	set reponer_demo = 
+	case 
+	when reponer_condicion >= 5 then CEILING(reponer_demo) else floor(reponer_demo)
+	end
+	where Nombre_Seccion = 'CUIDADO PERSONAL'
+
+	SELECT 
+	Fecha,
+	Codigo_SAP,
+	Nombre,
+	Codigo_Producto,
+	Cod_EAN,
+	Descripcion_Producto,
+	Nombre_Seccion,
+	Nombre_linea,
+	Nombre_Familia,
+	Cantidad,
+	Codigo_Proveedor,
+	Nombre_Proveedor,
+	Bulto, 
+	CASE 
+			  WHEN Medida = 'UN' THEN 'Unidad'
+			  WHEN Medida = 'KG' THEN 'Kilo'
+				 ELSE 'BULTO'
+	END Medida,
+	Stock,
+	reponer_demo Reponer,
+	--CEILING(Reponer) Reponer  
+	--round(Reponer,0) Reponer
+	ISNULL(ESTADO,'NO') ESTADO
+	INTO #TABLAFINAL
+	from #tablaff a 
+	left join dim_proveedor_operaciones b on a.Codigo_SAP=b.[cod tienda] and a.Codigo_Proveedor=b.cod
+	where reponer is not null
+	ORDER BY 7,8,12 DESC;
+
+	SELECT A.*,ISNULL(B.TIPO,'Alta') TIPO
+	INTO #TABLAFINALV2
+	FROM #TABLAFINAL A
+	LEFT JOIN Retail_Stage..[tmp_alta_baja_rptafood] B ON A.Nombre_linea= B.NOMBRE_LINEA
+	
+	SELECT *
+	FROM #TABLAFINALV2
+	WHERE ESTADO = @estado
+	AND TIPO = @TIPO
+	
+	
+
+	--DROP TABLE #tablaff;
+	--DROP TABLE #Fact_Bulto;
+	--DROP TABLE #tablaF;
+
+	end
+
+	else
+	begin
+	select '2';
+
+
+		SELECT CONVERT(DATE, Fecha) Fecha,Codigo_SAP,Nombre,a.codigo_proveedor,a.Nombre_Proveedor, Codigo_Producto,Cod_EAN,Descripcion_Producto ,
+	Nombre_Seccion,Nombre_linea,Nombre_Familia, 
+	SUM(Cantidad) Cantidad, (SUM(Cantidad) / Und_Medida) Bulto,Medida,(SUM(Stock_Unidad)-SUM(Cantidad) )Stock, 
+	  CASE WHEN (SUM(Stock_Unidad)-SUM(Cantidad))/Und_Medida > SUM(Cantidad)/ Und_Medida
+		   THEN SUM(Cantidad) / Und_Medida ELSE (SUM(Stock_Unidad)-SUM(Cantidad))/Und_Medida END Reponer  
+	  into #tablaF2
+	  FROM
+		 (
+		 
+		 SELECT  b.Fecha,c.Codigo_SAP,c.Nombre ,j.Codigo_Producto,j.Cod_EAN,j.Descripcion_Producto,
+		 h.codigo_proveedor,h.Nombre_Proveedor,
+		 j.Nombre_Seccion,j.Nombre_linea,j.nombre_familia, j.Und_Medida,j.Medida,--SUM(a.Cantidad) vta_rp,max(k.venta_unidad) vtapry,
+		 --(SUM(a.Cantidad)+max(k.venta_unidad)) 
+		 SUM(a.Cantidad) Cantidad, 
+		 0 AS Stock_Unidad
+				  FROM  Fact_Venta_Hora_Rp a INNER JOIN
+								   dbo.Dim_Tiempo b ON a.tiempo_Key = b.Tiempo_Key INNER JOIN
+								   dbo.Dim_Local c ON a.Local_Key = c.Local_Key INNER JOIN
+								   dbo.Dim_Hora d ON a.Hora_Key = d.Hora_Key INNER JOIN 
+								   dbo.Fact_Proveedor_Producto_Local f ON a.Local_Key=f.Local_Key and a.Producto_Key=f.Producto_Key
+								   INNER JOIN dbo.Dim_Proveedor h ON f.Proveedor_Key=h.Proveedor_Key
+								   inner JOIN #Fact_Bulto j ON a.Producto_Key=j.Producto_Key
+								   --inner join #venta_proyectada k on j.Codigo_Producto=k.codigo_producto and k.codigo_sap=c.Codigo_SAP
+			   WHERE b.Fecha = @Fecha AND c.Codigo_SAP = @Local --and d.Minuto_Formato between @Hora_Inicio and @hora_fin ---@hora_actual --
+			   GROUP BY b.Fecha,c.Codigo_SAP,h.codigo_proveedor,h.Nombre_Proveedor,j.Codigo_Producto,j.Cod_EAN,j.Descripcion_Producto,c.Nombre,
+			   j.Nombre_Seccion,j.Nombre_linea,j.Nombre_Familia,j.Und_Medida,j.Medida
+			   
+
+		  UNION ALL
+
+		   SELECT b.Fecha, c.Codigo_SAP,c.Nombre,d.Codigo_Producto, Cod_EAN,d.Descripcion_Producto,h.codigo_proveedor,h.Nombre_Proveedor,Nombre_Seccion,
+						Nombre_linea, Nombre_Familia,  Und_Medida,  Medida, 0 AS Cantidad, Stock_Unidad
+				  FROM  Fact_Stocks_Diario_Linea a INNER JOIN
+								   dbo.Dim_Tiempo b ON a.Tiempo_Key = b.Tiempo_Key INNER JOIN
+								   dbo.Dim_Local c ON a.Local_Key = c.Local_Key INNER JOIN
+								   #Fact_Bulto d ON a.Producto_Key=d.Producto_Key INNER JOIN
+								   dbo.Fact_Proveedor_Producto_Local f ON a.Local_Key=f.Local_Key AND a.Producto_Key=f.Producto_Key
+								   INNER JOIN dbo.Dim_Proveedor h ON f.Proveedor_Key=h.Proveedor_Key
+			   WHERE  b.Fecha = @Fecha AND c.Codigo_SAP = @Local AND Flag_Disponible = 1 
+			   ) a
+	GROUP BY Fecha, Codigo_SAP,Nombre,a.codigo_proveedor,a.Nombre_Proveedor,Codigo_Producto,Cod_EAN,Descripcion_Producto, 
+	Nombre_Seccion,Nombre_linea,Nombre_Familia,Medida,a.Und_Medida
+	HAVING   SUM(Cantidad) > 0 --AND ((SUM(Stock_Unidad) - SUM(Cantidad)) / Und_Medida) >= 0.5;
+
+
+	select *,reponer reponer_demo,substring(cast(cast(reponer as numeric(10,2))%1 as varchar),3,1) reponer_condicion
+	into #tablaff2
+	from
+	(
+	select *
+	from #tablaF2
+	where Nombre_Seccion = 'CUIDADO PERSONAL'
+	and Bulto  >= 0.50
+
+	union all
+
+	select *
+	from #tablaF2
+	where Nombre_Seccion <> 'CUIDADO PERSONAL'
+	and Bulto  >= 0.80
+	) as tb
+
+
+	--update #tablaff2
+	--set reponer_demo = 
+	--case 
+	--when reponer_condicion >= 8 then CEILING(reponer_demo) else floor(reponer_demo)
+	--end
+	--where Nombre_Seccion <> 'CUIDADO PERSONAL'
+	
+
+	--update #tablaff2
+	--set reponer_demo = 
+	--case 
+	--when reponer_condicion >= 5 then CEILING(reponer_demo) else floor(reponer_demo)
+	--end
+	--where Nombre_Seccion = 'CUIDADO PERSONAL'
+
+	SELECT 
+	Fecha,
+	Codigo_SAP,
+	Nombre,
+	Codigo_Producto,
+	Cod_EAN,
+	Descripcion_Producto,
+	Nombre_Seccion,
+	Nombre_linea,
+	Nombre_Familia,
+	Cantidad,
+	Codigo_Proveedor,
+	Nombre_Proveedor,
+	Bulto, 
+	CASE 
+			  WHEN Medida = 'UN' THEN 'Unidad'
+			  WHEN Medida = 'KG' THEN 'Kilo'
+				 ELSE 'BULTO'
+	END Medida,
+	Stock,
+	reponer_demo Reponer,
+	--CEILING(Reponer) Reponer  
+	--round(Reponer,0) Reponer
+	ISNULL(ESTADO,'NO') ESTADO
+	INTO #TABLAFINAL2
+	from #tablaff2 a 
+	left join dim_proveedor_operaciones b on a.Codigo_SAP=b.[cod tienda] and a.Codigo_Proveedor=b.cod
+	where reponer is not null
+	ORDER BY 7,8,12 DESC;
+
+	SELECT A.*,ISNULL(B.TIPO,'Alta') TIPO
+	INTO #TABLAFINALV3
+	FROM #TABLAFINAL2 A
+	LEFT JOIN Retail_Stage..[tmp_alta_baja_rptafood] B ON A.Nombre_linea= B.NOMBRE_LINEA
+	
+	SELECT *
+	FROM #TABLAFINALV3
+	WHERE ESTADO = @estado
+	AND TIPO = @TIPO
+	
+	
+
+	--DROP TABLE #tablaff;
+	--DROP TABLE #Fact_Bulto;
+	--DROP TABLE #tablaF;
+
+     drop table #Fact_Bulto;
+	 drop table #venta_proyectada;
+	 drop table #tablaff2
+	 drop table #tablaF2
+	 drop table #TABLAFINAL2
+	 drop table #TABLAFINALV3
+
+	end
+	
+	---------------------------------------------------------------------------------------------------
+	
+	
+	
+	
+
+END

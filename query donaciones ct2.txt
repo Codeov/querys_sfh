@@ -1,0 +1,16 @@
+select 
+b.anio_calendario año
+,b.nombre_mes mes
+,cast(a.hed_fcontable as date) fecha
+,c.formato
+,c.codigo_sap
+,cast(a.donacion as float) donacion
+from tmp_donaciones a
+inner join [10.20.1.5].Retail_DW.dbo.dim_tiempo b
+on a.HED_FCONTABLE=b.fecha
+inner join [10.20.1.5].Retail_DW.dbo.dim_local c
+on cast(a.HED_LOCAL as varchar(55))=c.codigo_alterno
+where 
+c.formato= 'MASS'
+--AND a.HED_FCONTABLE between '2022-01-01' and '2022-01-31' 
+order by fecha asc;

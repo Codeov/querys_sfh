@@ -1,0 +1,50 @@
+select 'enero' fecha, origen,tipo_carga,sum(monto) monto
+ from cloud_ecom
+ where fecha between '2023-01-01' and '2023-01-31'
+ group by 
+ origen,tipo_carga
+union all
+select 'febrero' fecha, origen,tipo_carga,sum(monto) monto
+ from cloud_ecom
+ where fecha between '2023-02-01' and '2023-02-31'
+ group by 
+ origen,tipo_carga
+union all
+select 'marzo' fecha, origen,tipo_carga,sum(monto) monto
+ from cloud_ecom
+ where fecha between '2023-03-01' and '2023-03-31'
+ group by 
+ origen,tipo_carga
+union all
+select 'abril' fecha, origen,tipo_carga,sum(monto) monto
+ from cloud_ecom
+ where fecha between '2023-04-01' and '2023-04-31'
+ group by 
+ origen,tipo_carga
+union all
+select 'mayo' fecha, origen,tipo_carga,sum(monto) monto
+ from cloud_ecom
+ where fecha between '2023-05-01' and '2023-05-31'
+ group by 
+ origen,tipo_carga
+union all
+select 'junio' fecha, origen,tipo_carga,sum(monto) monto
+ from cloud_ecom
+ where fecha between '2023-06-01' and '2023-06-31'
+ group by 
+ origen,tipo_carga
+union all
+select 'julio' fecha, origen,tipo_carga,sum(monto) monto
+ from cloud_ecom
+ where fecha between '2023-07-01' and '2023-07-31'
+ group by 
+ origen,tipo_carga
+union all
+select 'agosto' fecha, origen,tipo_carga,sum(monto) monto
+ from cloud_ecom
+ where fecha between '2023-08-01' and '2023-08-31'
+ group by 
+ origen,tipo_carga
+
+
+ ;

@@ -1,0 +1,33 @@
+declare
+  i integer;
+  
+  cursor c_folio is
+ 
+ 
+ select loc_numero from irs_locales
+ where loc_numero in (1366,1591,1615,1578)              ;
+              begin
+  -- Test statements here
+  for reg in c_folio loop
+  INSERT INTO mae_proceso_local(cod_local,
+                                  cod_proceso,
+                                  tip_estado,
+                                  fec_ini_ejec,
+                                  fec_fin_ejec,
+                                  fec_creacion,
+                                  cod_usuario_creacion)
+      SELECT reg.loc_numero
+            ,cod_proceso
+            ,tip_Estado
+            ,to_date(20231022, 'YYYYMMDD') fec_ini_ejec
+            ,fec_fin_ejec
+            ,SYSDATE
+           ,to_date(20231022, 'YYYYMMDD')
+        FROM mae_proceso_local
+       WHERE cod_local = 1013;
+    --a.fec_proceso=reg.hed_fcontable and
+  --  a.cod_proceso=2;
+    commit;
+                                               
+  end loop;
+end;

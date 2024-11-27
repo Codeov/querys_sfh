@@ -1,0 +1,124 @@
+
+ WITH CMBPRC AS
+        (
+SELECT l.loc_numero
+            , l.loc_descripcion
+            , h.hed_fcontable
+            , h.hed_pos
+            , h.hed_numtrx
+            , p.ptr_codprod
+            , x.cfg_descparam
+            , p.ptr_preciovta
+            , p.ptr_cprecionvo
+            , h.hed_cajero
+            , p.ptr_cprecioaut
+            , (p.ptr_unidades + p.ptr_peso) unidades
+        FROM ctx_header_trx h
+        , ctx_productos_trx p
+        , irs_locales l
+        ,(SELECT LPAD(m.cfg_valorparam,2,'0') cfg_valorparam
+                ,(LPAD(m.cfg_valorparam,2,'0')||' - '||m.cfg_descparam) cfg_descparam
+            FROM irs_configuraciones m
+            WHERE m.cfg_progid = 'MOTIVOCP') x
+        WHERE h.hed_pais = p.hed_pais
+        AND h.hed_origentrx = p.hed_origentrx
+        AND h.hed_local = p.hed_local
+        AND h.hed_pos = p.hed_pos
+        AND h.hed_numtrx = p.hed_numtrx
+        AND h.hed_fechatrx = p.hed_fechatrx
+        AND h.hed_horatrx = p.hed_horatrx
+        AND h.hed_local = l.loc_numero
+        AND p.ptr_cpreciomot = x.cfg_valorparam(+)
+        AND p.hed_local = 195
+        AND p.ptr_fcontable between to_date('20240601','yyyymmdd') AND to_date('20240605','yyyymmdd') 
+        AND p.ptr_cprecioflg = 1
+        AND h.hed_anulado = 'N'
+        )
+        SELECT c.loc_numero
+            , c.loc_descripcion
+            , to_char(c.hed_fcontable,'DD/MM/YYYY') AS dcompra
+            , c.hed_pos
+            , c.hed_numtrx
+            , c.ptr_codprod
+            , c.cfg_descparam
+            , c.ptr_preciovta
+            , c.ptr_cprecionvo
+            , c.hed_cajero
+            , c.ptr_cprecioaut
+            , c.unidades
+            --, pr.des_producto
+            , NVL(pr.des_producto, exct2sp.PKG_CT2_SCTRX.FN_SCTRX_OBTENER_DES_PRODUCTO(c.ptr_codprod)) AS des_producto
+        FROM CMBPRC c
+        , ect2sp.mae_productos pr
+        WHERE to_number(c.ptr_codprod) = pr.cod_ean(+)
+        ORDER BY c.hed_fcontable
+            , c.loc_numero
+            , c.hed_pos
+            , c.hed_numtrx;
+
+//////////////////////////////////////////
+select 
+a.ptr_fcontable,a.hed_local,a.hed_pos,a.hed_numtrx,
+a.ptr_codinterno,a.ptr_cprecioflg,a.ptr_cpreciomot,a.ptr_preciovta,a.ptr_cprecionvo,
+a.ptr_unidades,a.ptr_peso,
+a.ptr_brutopos,a.ptr_brutoneg,a.ptr_impuesto,a.ptr_impuesto_isc,
+a.ptr_mtoneto
+ from ctx_productos_trx a
+where a.ptr_fcontable= '04-06-2024'
+and a.hed_local=195
+and a.hed_pos=36
+and a.hed_numtrx=1794;
+
+///////////////////////////////////////////
+
+select a.* from `SPSA.ticket_venta` a
+where 
+a.fecha= '2024-06-04'
+and a.codigo_local= 'P195'
+and a.numero_terminal=36
+and a.numero_transaccion=1794
+and a.codigo_producto='00000002294';
+
+////////////////////////////////////////
+
+--20271185
+--20271158
+
+
+select distinct a.fecha,concat(a.codigo_local,"-",b.nombre) local,a.numero_terminal,a.numero_transaccion,
+a.numero_correlativo,
+a.numero_boleta_electronica,
+a.codigo_cajera,
+concat(a.codigo_producto,"-",c.nombre_producto) producto,
+a.venta_unidad unidades_vendidas,
+a.monto_precio_unitario precio_venta,
+a.valor_precio_cambio cambio_precio_nuevo,
+case when a.codigo_tipo_doc_trx= 'NCR'
+then
+round(-1*(abs(a.venta_unidad*a.monto_precio_unitario - a.venta_unidad*a.valor_precio_cambio)),2)
+else 
+round(abs(a.venta_unidad*a.monto_precio_unitario - a.venta_unidad*a.valor_precio_cambio),2)
+end diferencia_cambio_precio_val,
+a.codigo_motivo_cambio_precio,
+case when rtrim(ltrim(a.codigo_motivo_cambio_precio))='13' then 'ERROR OPERACIONES'
+when rtrim(ltrim(a.codigo_motivo_cambio_precio))='14' then 'ERROR CENTRAL' 
+when rtrim(ltrim(a.codigo_motivo_cambio_precio))='15' then 'CLIENTE'
+else 
+''end  descripcion_motivo_cambio_precio,
+a.codigo_supervisor_precio codigo_supervior
+ from `SPSA.ticket_venta` a
+ inner join `SPSA.dim_local` b
+on a.flag_loc_org=b.codigo_local
+inner join `SPSA.dim_producto` c
+on a.codigo_producto=c.codigo_producto
+where 
+a.fecha between '2024-01-01' and '2024-06-05'
+--and a.codigo_local= 'P195'
+--and a.numero_terminal=36
+--and a.numero_transaccion=1794
+and rtrim(ltrim(a.codigo_motivo_cambio_precio)) not in ('0',"")
+and a.venta_unidad<>0
+and a.valor_precio_cambio <>0
+and a.codigo_producto in ('00020271185','00020271158')
+order by 4 asc
+;

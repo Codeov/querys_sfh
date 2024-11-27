@@ -1,0 +1,41 @@
+select h.codigo_alterno codigo_local_pmm,g.codigo_producto,g.costo_unitario_20230308,g.costo_unitario_20230309,dif_costo_pmm dif_costo_pmm_dias from (select z.codigo_local,z.codigo_producto,(z.costo_unitario_20230308/(1-z.feed)) costo_unitario_20230308,
+(z.costo_unitario_20230309/(1-z.feed)) costo_unitario_20230309,abs((z.costo_unitario_20230308/(1-z.feed))-(z.costo_unitario_20230309/(1-z.feed))) dif_costo_pmm
+ from( 
+select f.*,e.fee_factor feed  from (
+      select k.*,l.formato from (
+                  select a.codigo_local,a.codigo_producto,a.costo costo_unitario_20230308,b.costo costo_unitario_20230309
+                  from (
+                        SELECT a.fecha,a.codigo_local,a.codigo_producto,a.costo FROM `sistemas-bi.SPSA.fact_costo` a
+                        WHERE a.fecha ='2023-03-08') a
+                  inner join (
+                  SELECT a.fecha,a.codigo_local,a.codigo_producto,a.costo FROM `sistemas-bi.SPSA.fact_costo` a
+                  WHERE a.fecha ='2023-03-09' ) b
+            on a.codigo_local=b.codigo_local and a.codigo_producto=b.codigo_producto) k 
+      inner join `sistemas-bi.SPSA.dim_local` l
+      on k.codigo_local=l.codigo_local
+                 ) f
+inner join `sistemas-bi.SPSA_STAGE.tmp_costo_fee_factor` e 
+on ltrim(rtrim(f.formato))=ltrim(rtrim(e.id_formato)) and e.codigo_local is null ) z
+where abs((z.costo_unitario_20230308/(1-z.feed))-(z.costo_unitario_20230309/(1-z.feed))) >50 and z.codigo_local not like 'S%'
+union all
+select z.codigo_local,z.codigo_producto,(z.costo_unitario_20230308/(1-z.feed)) costo_unitario_20230308,
+(z.costo_unitario_20230309/(1-z.feed)) costo_unitario_20230309,abs((z.costo_unitario_20230308/(1-z.feed))-(z.costo_unitario_20230309/(1-z.feed))) dif_costo_pmm
+ from( 
+select f.*,e.fee_factor feed  from (
+      select k.*,l.formato from (
+                  select a.codigo_local,a.codigo_producto,a.costo costo_unitario_20230308,b.costo costo_unitario_20230309
+                  from (
+                        SELECT a.fecha,a.codigo_local,a.codigo_producto,a.costo FROM `sistemas-bi.SPSA.fact_costo` a
+                        WHERE a.fecha ='2023-03-08' ) a
+                  inner join (
+                  SELECT a.fecha,a.codigo_local,a.codigo_producto,a.costo FROM `sistemas-bi.SPSA.fact_costo` a
+                  WHERE a.fecha ='2023-03-09') b
+            on a.codigo_local=b.codigo_local and a.codigo_producto=b.codigo_producto) k 
+      inner join `sistemas-bi.SPSA.dim_local` l
+      on k.codigo_local=l.codigo_local and l.formato='PLAZA VEA'
+                 ) f
+inner join `sistemas-bi.SPSA_STAGE.tmp_costo_fee_factor` e 
+on ltrim(rtrim(f.formato))=ltrim(rtrim(e.id_formato)) and f.codigo_local=e.codigo_local and e.fee_factor is not null) z
+where abs((z.costo_unitario_20230308/(1-z.feed))-(z.costo_unitario_20230309/(1-z.feed))) >50) g
+inner join `sistemas-bi.SPSA.dim_local` h 
+on g.codigo_local=h.codigo_local;

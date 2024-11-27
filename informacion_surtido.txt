@@ -1,0 +1,75 @@
+SELECT 
+a.Codigo_Producto codigo_producto
+,ifnull(b.nombre_producto,'-') nombre_producto
+,'' canasta
+,a.Codigo_Estado_Cia estado_cia
+,a.Estado_Cia nombre_estado_cia
+,a.Codigo_Estado_Local estado_local
+,a.Estado_Local nombre_estado_local
+ ,ifnull(b.nombre_marca,'-') nombre_marca
+ ,ifnull(b.nombre_tipo_marca,'-') nombre_tipo_marca
+ ,a.Nombre_Division nombre_division
+ ,a.Nombre_Area nombre_area
+ ,a.Nombre_Seccion nombre_seccion
+ ,a.Nombre_Linea nombre_linea
+ ,a.Nombre_Familia nombre_familia
+ ,a.Precio_Base Precio_Base
+ FROM `spsa-bi-tablones.SPSA_Tablon.tablon_surtido_comercial` a 
+ inner join 
+  `sistemas-bi.SPSA.dim_producto` b 
+on a.codigo_producto=b.codigo_producto
+where a.fecha = '2023-02-22' 
+and a.codigo_local = 'P037'; 
+
+
+------------------------
+------------------------
+
+select * from (
+SELECT 
+a.codigo_local codigo_local
+,a.Codigo_Producto codigo_producto
+,ifnull(b.nombre_producto,'-') nombre_producto
+,'' canasta
+,a.Codigo_Estado_Cia estado_cia
+,a.Estado_Cia nombre_estado_cia
+,a.Codigo_Estado_Local estado_local
+,a.Estado_Local nombre_estado_local
+ ,ifnull(b.nombre_marca,'-') nombre_marca
+ ,ifnull(b.nombre_tipo_marca,'-') nombre_tipo_marca
+ ,a.Nombre_Division nombre_division
+ ,a.Nombre_Area nombre_area
+ ,a.Nombre_Seccion nombre_seccion
+ ,a.Nombre_Linea nombre_linea
+ ,a.Nombre_Familia nombre_familia
+ ,a.Precio_Base Precio_Base
+ ,ifnull(c.Precio_Promo,0) Precio_Promo
+ FROM `spsa-bi-tablones.SPSA_Tablon.tablon_surtido_comercial` a 
+ inner join 
+  `sistemas-bi.SPSA.dim_producto` b 
+on a.codigo_producto=b.codigo_producto
+left join `spsa-comercial-pricing-sd.Promociones.DP_Reporte_Promocion` c
+on a.Codigo_Producto=c.codigo_producto and a.Codigo_Local=c.Codigo_Local
+where a.fecha = '2023-04-26' 
+and a.codigo_local in  ('P037')
+group by
+a.codigo_local 
+,a.Codigo_Producto 
+,b.nombre_producto 
+,a.Codigo_Estado_Cia 
+,a.Estado_Cia 
+,a.Codigo_Estado_Local 
+,a.Estado_Local 
+ ,b.nombre_marca 
+ ,b.nombre_tipo_marca
+ ,a.Nombre_Division 
+ ,a.Nombre_Area 
+ ,a.Nombre_Seccion 
+ ,a.Nombre_Linea 
+ ,a.Nombre_Familia 
+ ,a.Precio_Base 
+ ,c.Precio_Promo ) a
+ order by a.codigo_producto asc;
+
+
+gsutil -m mv gs://spsa/bst/informacion_usuario/*.csv \\10.20.17.45\Cloud\SPSA\Archivos_Compartidos\Surtido_Semanal\

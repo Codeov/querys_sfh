@@ -1,0 +1,3 @@
+select a.creation_date,a.store_id,a.ord_vtex_id,a.total_descuento,a.total_pago from vtex_pagos_caja a 
+where a.store_id= 'JOKR'
+order by a.creation_date desc;

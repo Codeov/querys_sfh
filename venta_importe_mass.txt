@@ -1,0 +1,107 @@
+ select distinct a.fecha,a.codigo_alterno from 
+ (
+  SELECT 
+distinct a.fecha,a.codigo_local,b.codigo_alterno,a.numero_terminal,a.numero_transaccion
+ FROM `sistemas-bi.SPSA.ticket_venta` a
+ inner join `sistemas-bi.SPSA.dim_local` b 
+ on a.codigo_local=b.codigo_local
+ where a.fecha between '2023-06-01' and '2023-06-30'
+ and b.formato= 'MASS' --7 926 639
+ ) a 
+left join 
+(
+  SELECT 
+distinct a.fecha,a.codigo_local,b.codigo_alterno,a.numero_terminal,a.numero_transaccion
+ FROM `sistemas-bi.SPSA.int_fact_forma_pago` a
+ inner join `sistemas-bi.SPSA.dim_local` b 
+ on a.codigo_local=b.codigo_local
+ where a.fecha between '2023-06-01' and '2023-06-30'
+ and b.formato= 'MASS'
+ --and a.codigo_tipo_trx='PVT'
+) b --7 926 639
+on a.fecha=b.fecha and a.codigo_local=b.codigo_local and a.numero_terminal=b.numero_terminal and a.numero_transaccion=b.numero_transaccion
+where b.fecha is null;
+
+##############################################################################
+
+ select  a.fecha,a.codigo_local, vb,ib,vb-vb dif from 
+ (
+  SELECT 
+ a.fecha,a.codigo_local,sum(a.venta_bruta) vb 
+ FROM `sistemas-bi.SPSA.ticket_venta` a
+ inner join `sistemas-bi.SPSA.dim_local` b 
+ on a.codigo_local=b.codigo_local
+ where a.fecha between '2023-06-01' and '2023-06-30'
+ and b.formato= 'MASS' 
+  --and a.codigo_local='1091'
+ group by a.fecha,a.codigo_local
+ ) a 
+inner join 
+(
+  SELECT 
+ a.fecha,a.codigo_local,sum(a.importe_pago_bruto)-sum(a.monto_redondeo)-sum(a.monto_donacion)ib
+ FROM `sistemas-bi.SPSA.int_fact_forma_pago` a
+ inner join `sistemas-bi.SPSA.dim_local` b 
+ on a.codigo_local=b.codigo_local
+ where a.fecha between '2023-06-01' and '2023-06-30'
+ and b.formato= 'MASS'
+ and a.codigo_tipo_trx='PVT'
+ --and a.codigo_local='1091'
+ group by  a.fecha,a.codigo_local
+) b 
+on a.fecha=b.fecha and a.codigo_local=b.codigo_local 
+where a.codigo_local='1091' and a.fecha = '2023-06-01';
+
+##############################################################################
+
+create or replace table `sistemas-bi.Tacho.venta_bruta_mass` 
+partition by fecha
+as
+select 
+ a.fecha,a.codigo_local,sum(a.venta_bruta) vb 
+ FROM `sistemas-bi.SPSA.ticket_venta` a
+ inner join `sistemas-bi.SPSA.dim_local` b 
+ on a.codigo_local=b.codigo_local
+ where a.fecha between '2023-06-01' and '2023-06-30'
+ and b.formato= 'MASS' 
+ group by a.fecha,a.codigo_local;
+
+create or replace table `sistemas-bi.Tacho.importe_bruto_mass` 
+partition by fecha
+as
+select 
+ a.codigo_local,concat(a.codigo_local,'-',b.nombre) nombre_local, c.descripcion_tipo_medio_Pago medio_pago,
+ sum(a.importe_pago_bruto) importe_pago_bruto, sum(ifnull(a.monto_redondeo,0)) monto_redondeo, sum(ifnull(a.monto_donacion,0)) monto_donacion, 
+ 0.0 venta_bruta,a.fecha
+ FROM `sistemas-bi.SPSA.int_fact_forma_pago` a
+ inner join `sistemas-bi.SPSA.dim_local` b 
+ on a.codigo_local=b.codigo_local
+ inner join `sistemas-bi.SPSA.dim_medio_pago` c 
+ on cast(a.codigo_medio_pago as int64)=c.codigo_medio_pago
+ where a.fecha between '2023-06-01' and '2023-06-30'
+ and b.formato= 'MASS' 
+ and a.codigo_tipo_trx= 'PVT'
+ group by  a.codigo_local,b.nombre,c.descripcion_tipo_medio_Pago,a.fecha;
+
+update `sistemas-bi.Tacho.importe_bruto_mass` a
+set a.venta_bruta= b.vb
+from 
+(
+  select a.fecha,a.codigo_local,a.vb from `sistemas-bi.Tacho.venta_bruta_mass` a
+) b
+where a.fecha=b.fecha and a.codigo_local=b.codigo_local;
+
+##############################################################################
+
+select a.* from 
+`sistemas-bi.Tacho.importe_bruto_mass` a
+order by a.fecha,a.codigo_local ;
+
+
+
+
+
+
+
+
+

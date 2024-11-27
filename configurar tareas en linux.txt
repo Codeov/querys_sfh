@@ -1,0 +1,11 @@
+crontab -e
+esc
+flecha abajo
+ultimo carácter de la primera linea
+esc
+i
+enter
+--agregar tarea
+shift :
+wq
+enter

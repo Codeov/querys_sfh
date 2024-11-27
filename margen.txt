@@ -1,0 +1,12 @@
+select *,(venta_neta - costo) margen from (SELECT b.anio_calendario ,b.nombre_mes mes,b.nro_mes_anio,c.formato,d.codigo_producto,d.nombre_producto,sum(a.venta_neta) venta_neta,sum(a.venta_unidad) venta_unidades,
+sum(costo_kardex) costo
+FROM `sistemas-bi.SPSA.ticket_venta` a 
+inner join `sistemas-bi.SPSA.dim_tiempo` b on a.codigo_tiempo = b.codigo_tiempo 
+inner join `sistemas-bi.SPSA.dim_local` c on a.codigo_local = c.codigo_local
+inner join `sistemas-bi.SPSA.dim_producto` d on a.codigo_producto = d.codigo_producto
+where b.fecha between '2018-01-01' and '2018-01-31'
+and c.formato = 'MASS'
+and d.codigo_producto in ('00020008541','00000988971','00000965652','00000938825')
+group by b.anio_calendario ,b.nombre_mes,b.nro_mes_anio,c.formato,d.codigo_producto,d.nombre_producto)
+order by anio_calendario asc , nro_mes_anio asc 
+;

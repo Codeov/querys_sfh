@@ -1,0 +1,20 @@
+
+--query ct2
+select a.ptr_fcontable fecha,a.hed_local codigo_local,b.loc_descripcion,
+a.hed_pos caja,a.hed_numtrx transaccion,a.ptr_tipodoc tipo_documento,
+a.ptr_codinterno codigo_producto,
+a.ptr_cprecionvo valor_precio_cambio,a.ptr_preciovta monto_precio_unitario,
+CASE
+          WHEN to_number(a.ptr_codprod)
+            IN (SELECT to_number(r.cod_ean)
+                  FROM ict2_cod_recargas r)
+          THEN  a.ptr_total
+            ELSE a.ptr_unidades + a.ptr_peso END unidades
+ from ctx_productos_trx a 
+ inner join irs_locales b
+ on a.hed_local=b.loc_numero
+where a.ptr_fcontable= '07-10-2023'
+and a.hed_local=134
+and a.hed_pos=10
+and a.hed_numtrx=9705
+and cast(a.ptr_codinterno as integer)=20353594;

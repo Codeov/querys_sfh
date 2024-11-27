@@ -1,0 +1,67 @@
+begin
+ declare @v_m varchar(50);
+ declare @v_m_t varchar(50);
+ declare @v_n_m_t varchar(2);
+ declare @y varchar (4);
+
+ set @y ='2023';
+
+ set @v_m = (select top 1 substring(nom_file,
+       charindex('_',nom_file,
+							  charindex('_',nom_file,1)+1)+1,
+	                                                        (charindex('_',nom_file,
+                                                                                    charindex('_',nom_file,
+	                                                                                                       charindex('_',nom_file,1)+1)+1))
+	   -(charindex('_',nom_file,
+                                charindex('_',nom_file,1)+1)+1)) mes	   
+	  from tmp_op_ecom group by nom_file);
+
+  set @v_m_t = (select UPPER(LEFT(@v_m, 1)) + LOWER(SUBSTRING(@v_m, 2, LEN(@v_m))));
+
+  set @v_n_m_t =(select case when @v_m_t = 'Enero' then '01'
+         when @v_m_t = 'Febrero' then '01'
+		 when @v_m_t = 'Marzo' then '01'
+		 when @v_m_t = 'Abril' then '01'
+		 when @v_m_t = 'Mayo' then '01'
+		 when @v_m_t = 'Junio' then '01'
+		 when @v_m_t = 'Julio' then '01'
+		 when @v_m_t = 'Agosto' then '01'
+		 when @v_m_t = 'Setiembre' then '01'
+		 when @v_m_t = 'Octubre' then '01'
+		 when @v_m_t = 'Noviembre' then '01'
+		 else '12' end) 
+
+
+	 select fecha,cod_tda,cod_linea,nom_file,nom_hoja,monto
+	into #tmp_op_ecom
+	from 
+	(
+	select  cod_linea,cod_tda,nom_file,nom_hoja,monto_dia_1 , monto_dia_2 , monto_dia_3 , monto_dia_4 , monto_dia_5 , monto_dia_6 , monto_dia_7 , monto_dia_8 , monto_dia_9 , monto_dia_10 , monto_dia_11 , monto_dia_12 , monto_dia_13 , monto_dia_14 , monto_dia_15 , monto_dia_16 , monto_dia_17 , monto_dia_18 , monto_dia_19 , monto_dia_20 , monto_dia_21 , monto_dia_22 , monto_dia_23 , monto_dia_24 , monto_dia_25 , monto_dia_26 , monto_dia_27 , monto_dia_28 , monto_dia_29 , monto_dia_30 , monto_dia_31 
+	from tmp_op_ecom ) p
+	unpivot 
+	 (monto for fecha in 
+	  (monto_dia_1 , monto_dia_2 , monto_dia_3 , monto_dia_4 , monto_dia_5 , monto_dia_6 , monto_dia_7 , monto_dia_8 , monto_dia_9 , monto_dia_10 , monto_dia_11 , monto_dia_12 , monto_dia_13 , monto_dia_14 , monto_dia_15 , monto_dia_16 , monto_dia_17 , monto_dia_18 , monto_dia_19 , monto_dia_20 , monto_dia_21 , monto_dia_22 , monto_dia_23 , monto_dia_24 , monto_dia_25 , monto_dia_26 , monto_dia_27 , monto_dia_28 , monto_dia_29 , monto_dia_30 , monto_dia_31)
+	) as q;
+	
+--	select nom_file,nom_hoja,sum(monto) from #tmp_cloud_ecom
+--group by nom_file,nom_hoja;
+
+
+truncate table op_ecom; 
+
+insert into op_ecom
+
+  select @y+'-'+@v_n_m_t+'-'+case when len(ltrim(rtrim(substring(a.fecha,charindex('_',a.fecha,charindex('_',a.fecha,1)+1)+1,len(a.fecha)-charindex('_',a.fecha,charindex('_',a.fecha,1)+1)))))=1
+   then '0'+ (ltrim(rtrim(substring(a.fecha,charindex('_',a.fecha,charindex('_',a.fecha,1)+1)+1,len(a.fecha)-charindex('_',a.fecha,charindex('_',a.fecha,1)+1)))))
+   else 
+   ltrim(rtrim(substring(a.fecha,charindex('_',a.fecha,charindex('_',a.fecha,1)+1)+1,len(a.fecha)-charindex('_',a.fecha,charindex('_',a.fecha,1)+1)))) 
+   end fecha
+  ,a.cod_tda,a.cod_linea,
+  case when right(rtrim(a.nom_file),11)='margen.xlsx' then 'M'
+  ELSE 'V' end origen,
+  'EC' tipo_carga,
+  a.monto  from #tmp_op_ecom a;
+
+ drop table #tmp_op_ecom;
+
+end 

@@ -1,0 +1,91 @@
+
+SELECT 
+      a.codigo_motivo_cambio_precio codigo_motivo_cambio_precio
+      ,sum(a.dif_cambio_precio) dif_cambio_precio FROM `sistemas-bi.SPSA.ticket_venta` a 
+inner join `sistemas-bi.SPSA.dim_producto` b
+on a.codigo_producto=b.codigo_producto 
+inner join `sistemas-bi.SPSA.dim_local` c
+on a.codigo_local=c.codigo_local
+where a.fecha between '2022-12-01' and '2022-12-31'
+and c.formato in ('PLAZA VEA','PLAZA VEA SUPER','PLAZA VEA EXPRESS')
+and b.nombre_division in ('ABARROTES','FRESCOS','NON FOOD')
+and a.codigo_motivo_cambio_precio in ('13','14')
+group by a.codigo_motivo_cambio_precio;
+
+update `sistemas-bi.SPSA.int_fact_ticket` a
+set a.dif_cambio_precio = b.dif_cambio_precio_up
+from
+(
+      SELECT 
+            a.dato_f2
+            ,a.codigo_local
+            ,a.numero_terminal
+            ,a.numero_transaccion
+            ,a.codigo_producto
+            ,a.numero_correlativo
+            ,a.codigo_motivo_cambio_precio codigo_motivo_cambio_precio
+            ,case when a.dif_cambio_precio > 0 then a.dif_cambio_precio* -1
+            else a.dif_cambio_precio end dif_cambio_precio_up
+            ,a.dif_cambio_precio dif_cambio_precio   
+            FROM `sistemas-bi.SPSA.int_fact_ticket` a 
+      inner join `sistemas-bi.SPSA.dim_producto` b
+      on a.codigo_producto=b.codigo_producto 
+      inner join `sistemas-bi.SPSA.dim_local` c
+      on a.codigo_local=c.codigo_local
+      where a.dato_f2 between '2022-12-01' and '2022-12-31'
+      and c.formato in ('PLAZA VEA','PLAZA VEA SUPER','PLAZA VEA EXPRESS')
+      and b.nombre_division in ('ABARROTES','FRESCOS','NON FOOD')
+      and a.codigo_motivo_cambio_precio in ('13','14')
+      --and a.codigo_local ='P195'
+) b
+where a.dato_f2=b.dato_f2 and a.codigo_local=b.codigo_local and a.numero_terminal=b.numero_terminal
+and a.numero_transaccion=b.numero_transaccion and a.codigo_producto=b.codigo_producto and 
+a.numero_correlativo=b.numero_correlativo;
+
+------------------------------------------------------------
+				VALIDACION TICKET VENTA Y ORIGEN
+------------------------------------------------------------
+select a.*, case when a.valor_precio_cambio <> 0 then abs(a.venta_unidad*a.valor_precio_cambio - a.venta_unidad*valor_precio_unitario) else 0 end dif_cambio_precio
+ from (
+        select p.ptr_codinterno,  CASE
+                  WHEN to_number(p.ptr_codprod)
+                    IN (SELECT to_number(r.cod_ean)
+                          FROM ict2_cod_recargas r)
+                  THEN  p.ptr_total
+                    ELSE p.ptr_unidades + p.ptr_peso END venta_unidad ,
+                     p.ptr_cprecionvo valor_precio_cambio,
+                     p.ptr_preciovta valor_precio_unitario,
+                     p.ptr_cpreciomot codigo_motivo
+                       
+                     from ctx_productos_trx p
+                     inner join ifhprdmst_ct q
+                     on to_number(p.ptr_codinterno) = q.prd_lvl_number and 
+                     to_number(p.ptr_codprod) = q.COD_BAR_UPC 
+        where 
+        p.ptr_fcontable between '01-12-2022' and '31-12-2022'
+        and p.hed_local in (195)
+        and q.cod_div in ('D3','D1','D2')    
+        --and p.ptr_codinterno ='00000000949'
+        and p.ptr_cpreciomot in (13,14)) a; --AGREGAR GORUP BY
+
+SELECT 
+      a.codigo_producto
+      ,a.venta_unidad
+      ,a.valor_precio_cambio
+      ,a.monto_precio_unitario
+      ,a.codigo_motivo_cambio_precio codigo_motivo_cambio_precio
+      ,sum(a.dif_cambio_precio) dif_cambio_precio FROM `sistemas-bi.SPSA.ticket_venta` a 
+inner join `sistemas-bi.SPSA.dim_producto` b
+on a.codigo_producto=b.codigo_producto 
+inner join `sistemas-bi.SPSA.dim_local` c
+on a.codigo_local=c.codigo_local
+where a.fecha between '2022-12-01' and '2022-12-31'
+and c.formato in ('PLAZA VEA','PLAZA VEA SUPER','PLAZA VEA EXPRESS')
+and b.nombre_division in ('ABARROTES','FRESCOS','NON FOOD')
+and a.codigo_motivo_cambio_precio in ('13','14')
+and a.codigo_local ='P195'
+group by a.codigo_producto
+      ,a.venta_unidad
+      ,a.valor_precio_cambio
+      ,a.monto_precio_unitario
+      ,a.codigo_motivo_cambio_precio;

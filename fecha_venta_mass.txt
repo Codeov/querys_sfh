@@ -1,0 +1,44 @@
+begin
+
+create or replace table `Tacho.first_sale_mass`
+partition by fecha
+as
+select b.codigo_local,min(a.dato_f2) fecha from `SPSA.int_fact_ticket` a
+inner join `SPSA.dim_local` b
+on a.codigo_local=b.codigo_local
+where --a.dato_f2 between '2024-06-13' and '2024-06-13'
+--and 
+b.formato= 'MASS'
+--and a.codigo_local='1598'
+and a.codigo_tipo_trx='PVT'
+group by b.codigo_local
+having sum(a.venta_neta)>0
+;
+
+create or replace table `Tacho.first_sale_mass_seccion`
+partition by fecha
+as
+select b.codigo_local,min(a.dato_f2) fecha from `SPSA.int_fact_ticket` a
+inner join `SPSA.dim_local` b
+on a.codigo_local=b.codigo_local
+inner join `SPSA.dim_producto` c
+on a.codigo_producto=c.codigo_producto
+where --a.dato_f2 between '2024-06-13' and '2024-06-13'
+--and 
+b.formato= 'MASS'
+and c.codigo_seccion in ('S14','S15')
+--and a.codigo_local='1598'
+and a.codigo_tipo_trx='PVT'
+group by b.codigo_local
+having sum(a.venta_neta)>0
+;
+
+create or replace table `sistemas-bi.SPSA.date_sales_mass`
+as
+select a.codigo_local,c.nombre,a.fecha fecha_primera_venta,b.fecha fecha_primera_venta_aves_vacuno from `Tacho.first_sale_mass` a
+left join `Tacho.first_sale_mass_seccion` b
+on a.codigo_local=b.codigo_local
+inner join `sistemas-bi.SPSA.dim_local` c
+on a.codigo_local=c.codigo_local;
+
+end 

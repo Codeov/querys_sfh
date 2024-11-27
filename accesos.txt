@@ -1,0 +1,215 @@
+----------Link Sharepoint ----------
+https://intercorpretail.sharepoint.com/sites/SP-SPSABI 
+----------Servidor IRPRDF0018 ----------
+\\10.20.1.5\Documentos\Instaladores
+Usuario  :inretail\admdatamart
+Password :D4t4m4rt
+----------Acceso CT2------------
+Servidor   : SPT03
+Usuario    : SXCT2SP
+Pass       : CT2remiX
+----------Acceso CT2 QA------------
+EXCT2SP/oracleperu@SPT02Q
+EXCOMSP	K4iosabiCO
+----------Acceso CT2 (Validacion Vta en Linea)------------
+BD         : SPT03
+user       : ectsp
+pass       : Lima2017
+----------Acceso a PMM----------
+Servidor : SPT01
+Usuario  : SINTERFACE
+Pass     : SF5590X
+-------Servidor de Desarrollo----------
+Host       : iprdf0027
+IP         : 172.29.1.26
+Usuario    : inretail\admdatamart
+Pass       : D4t4m4rt
+-------Servidor 45 I----------
+IP      : 10.20.17.45
+Hostname: SPPRDV0045
+Usuario : sp\adm_datalake
+Pass    : Spsa2018
+---------Servidor 45 II-------------------
+Usuario : inretail\admdatamart   
+Pass    : D4t4m4rt
+---------Servidor Cubos---------
+IP:10.20.16.45
+inretail\admdatamart
+D4t4m4rt
+------------DWH I---------------
+Base DAtos : dwhsp.sql.azuresynapse.net
+usuario    : admdatamartsp@intercorpretail.pe
+clave      : D4tXui7D/*-.5o0-\Q
+----------DWH II------------------
+tcp:dwhsp.sql.azuresynapse.net,1433
+Server: dwhsp.sql.azuresynapse.net
+user   : admdatamart
+user   : D4tXui7D/*-.5o0-\Q
+--------azure y analisis service-------
+asazure://aspaaseastus2.asazure.windows.net/spanlsrvprd01
+usuario: admdatamartsp@intercorpretail.pe
+clave : D4tXui7D/*-.5o0-\Q
+----------Servidor 35 I--------------
+Usuario : admdatamart
+Pass    : /E?bQXE)0\M-Cj)
+  			11111					
+
+----------Servidor 35 II--------------
+server : 35.188.252.35
+user : Cvt_45
+pass : Spsa2023
+
+-----------SERVER - AZURE / 20.230.100.52---------------
+SERVER  : 20.230.100.52
+USUARIO : admdatamart
+Clave   : D4t4m4rtspsa
+
+-----------Credenciales del Servidor de desarrollo
+Servidor : 10.30.7.14
+Usuario  : SPQAV0714\admbiqa
+Clave    : Cub0s4Dot$
+
+------------------------------------Acceso al Servidor Virtual SharePoint2------------
+IP:172.29.1.26
+Usuario:inretail\admsharepointbi
+Password:Sh4r3p01nt@...
+
+----------------------------Acceso a PMM------------------
+SINTERFACE/SF5590X@SPT01
+SINTERFACE/DESA01@SPT01Q --(QA)
+--chat gtp
+--EINTERFACE.BI_PKG_INTERFACES
+--SP_EXP_MAE_SURTIDO;
+
+------------------------- link incidencias bi  -----------
+https://mesadeservicios.intercorpretail.pe/glpi/ 
+Boris.Salazar
+SPSA2023#$
+
+#credenciales bct
+ip = '10.20.11.13\sqlspsav2'
+bd= 'ASR_CLA'
+us= 'adm_spsa'
+pw= 'BCT2015sps@'
+
+---------- CUPONES EMITIDOS y COLABORADOR  -------------------
+Como te comenté la BD del Cupones no es Oracle, sino SQL Server.
+Esta es la IP: 10.20.11.14\IRWIT01
+Y la BD es: Coupons
+Producción
+Usuario: sel_bi 
+Clave: BI2015#
+
+---------- DP ----------
+10.20.12.230\DPC4PRD sintegra T5S1ntg3#KJ
+
+---------- Link Gac ----------
+http://gac.spsa.pe:8089/
+
+-----------------power bi-----------------
+correo: admdatamartsp@intercorpretail.pe
+password: D4tXui7D/*-.5o0-\Q
+
+---------------------WECONNECT---------------------
+-- https://egjl.fa.us6.oraclecloud.com:443/hcmUI/faces/ResetPassword?ase.gid=c3cdf36bca314541a3e8e6ca6e008626
+--https://egjl.fa.us6.oraclecloud.com/
+usuario:Over.Salazar
+contraseña:Borico1997
+
+---------------------WECONNECT2--------------------
+https://inretail.cursalab.io/
+
+---------------------contraseña de aplicacion outlook (over.salazar@spsa.pe) 
+kgsndqcvltqhlslq
+
+----Credenciales admin SFTP----
+servidor: 34.31.152.94
+ftpadministrador
+)EMdyFB<Ar4ZZJd
+
+--Credenciales Restringidas SFTP
+user:prueba1 contraseña:Prueba8421 puerto:22 servidor:34.31.152.94
+
+--credenciales Looker Studio
+admdatamartsp@spsa.pe
+D4t4m4rt2024
+
+--190.216.178.134:8091
+http://ventaenlinea.spsa.pe:8091
+Usuario:SP43226415
+Clave  :43226415  
+
+user:ectsp
+pass:Lima2017
+BD:SPT03
+
+----tabular
+runas /netonly /user:SP\SP71284207 "C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE
+
+----jsatellite
+usuario:SP40463074
+clave  :hKKDIG8Um...
+
+--link reporte Merkao Belen
+https://app.powerbi.com/Redirect?action=OpenApp&appId=440ea37f-0c65-4f0f-937a-b736798dc5b4&ctid=5daabe65-ff53-4336-a448-2f61ecf0b059
+Power BI
+
+23/24
+
+https://app.powerbi.com/view?r=eyJrIjoiYjE1NzI3MWQtMDc1OS00Y2E3LWI3MDAtNGFkNGU5ZmEwYTRhIiwidCI6IjVkYWFiZTY1LWZmNTMtNDMzNi1hNDQ4LTJmNjFlY2YwYjA1OSIsImMiOjR9
+
+-------------------------Reporte Billing Corporativo------------------------------------------
+https://lookerstudio.google.com/reporting/4d02a45f-f1b6-497b-8883-50e095f262bf/page/p_yxy5clylbd
+https://lookerstudio.google.com/reporting/0d1db758-60a0-49fd-8669-086c64d32aa4/page/p_n8yj809pad
+Easily Build Custom Reports and Dashboards - Looker Studio
+Looker Studio turns your data into informative reports and dashboards that are easy to read, easy to share, and fully custom.
+
+#################servidor linux
+ssh adm_procesos@172.31.23.205(pruba)
+Spsa2022@
+
+CredencialesPRD:
+Username: spsa
+Password: 9dGJB9Kecbyr7ZE
+la Ip del servidor es: 34.173.57.227
+puerto: 22
+dirección: /share_files/scheduler/historiaspsa
+
+CredencialesQA:
+Username: qa_spsa
+Password: R&XfDeDXQ9se!2
+la Ip del servidor es: 34.134.251.183
+puerto: 22
+
+https://weconnectsuperapp.pe/
+We Connect SuperApp
+We Connect SuperApp - Intercorp
+ 
+--srvbi-rpt003-vm
+ip:35.245.79.21
+us:sistemas_bi_rpt
+pw:R(jo\7DbX}v|ieQ
+
+-------- VALES PAVO -------Productivo---------------------
+SERVIDO: CLIFRE
+Usuario: SAP_CLIFRE
+password: SAP$538188
+
+-------------------
+SCT2CHP/b4s1l34hp@HPCT02
+SXCT2CHP/APP_cT2_Proy2019@HPCT02
+
+----------------------link consulta consumo billing
+https://lookerstudio.google.com/reporting/4d02a45f-f1b6-497b-8883-50e095f262bf/page/p_yxy5clylbd
+https://lookerstudio.google.com/reporting/0d1db758-60a0-49fd-8669-086c64d32aa4/page/p_n8yj809pad
+Easily Build Custom Reports and Dashboards - Looker Studio
+Looker Studio turns your data into informative reports and dashboards that are easy to read, easy to share, and fully custom.
+
+#### 
+ct19250199
+#3G2ihVm
+
+HPSA PRD CT3:
+IP: 10.20.11.136
+Puerto: 5432
+BD: hpsa_peru

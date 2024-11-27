@@ -1,0 +1,28 @@
+--cloud formas pago--
+select a.fecha,a.importe_bruto_ct importe_bruto_ct, b.importe_bruto_dlk importe_bruto_dlk,(a.importe_bruto_ct -b.importe_bruto_dlk) Monto_dif
+from (select a.fecha,sum(a.importe_bruto) importe_bruto_ct from repro_tabla_fecha_fp_ct a
+group by a.fecha) a inner join(select a.fecha, sum(a.importe_bruto)importe_bruto_dlk from  [dbo].[repro_tabla_fecha_local_fp_dlk] a
+group by a.fecha) b
+on a.fecha=b.fecha;
+
+select * from tmp_Interfaces_Diario_Lista_Reproceso_fp_MOD order by 5 asc;
+
+select a.fecha,a.local,a.tipo,sum(a.importe_bruto) importe_ct, sum(b.importe_bruto) importe_dlk,sum(a.importe_bruto-isnull(b.importe_bruto ,0.00)) diferencia_ct_dlk from repro_tabla_local_fecha_fp_ct a
+	left join repro_tabla_fecha_local_fp_dlk b on a.fecha=b.fecha and cast(a.local as varchar)=b.codigo_alterno and a.tipo=b.tipo
+	where a.local = 264--(a.importe_bruto-isnull(b.importe_bruto ,0.00)) <>0 and (a.importe_bruto-isnull(b.importe_bruto ,0.00))<>0.01
+	group by a.fecha,a.local,a.tipo;
+
+--op formas pago
+select a.fecha,a.importe_bruto_ct importe_bruto_ct, b.importe_bruto_op importe_bruto_op,(a.importe_bruto_ct -b.importe_bruto_op) Monto_dif
+from (select a.fecha,sum(a.importe_bruto) importe_bruto_ct from repro_tabla_fecha_fp_ct a
+group by a.fecha) a inner join (select a.fecha,sum(a.importe_bruto) importe_bruto_op from repro_tabla_fecha_fp_op a
+group by a.fecha) b
+on a.fecha=b.fecha; 
+
+select * from tmp_Interfaces_Diario_Lista_Reproceso_FP_OP;
+
+select a.fecha,a.local,a.tipo,isnull(a.importe_bruto,0.00) importe_bruto_ct,isnull(b.importe_bruto,0.00) importe_bruto_op,a.importe_bruto-isnull(b.importe_bruto ,0.00) diferencia_ct_op
+	from  dbo.repro_tabla_local_fecha_fp_ct a 
+	left join dbo.repro_tabla_local_fecha_fp_op b on b.fecha=a.fecha and rtrim(b.local)=rtrim(a.local) and rtrim(b.tipo)=rtrim(a.tipo)
+	where a.local = 264--(a.importe_bruto-isnull(b.importe_bruto ,0.00)) <>0 and (a.importe_bruto-isnull(b.importe_bruto ,0.00))<>0.01
+	order by 2;

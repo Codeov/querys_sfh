@@ -1,0 +1,80 @@
+
+declare @v_tiempo_key_min as integer;
+declare @v_tiempo_key_max as integer;
+declare @v_tiempo_key_var as integer;
+
+select row_number() over (order by tiempo_key) id,tiempo_key
+into #list_tiempo_key from Dim_Tiempo where Fecha
+between '2024-09-01' and '2024-11-17';
+
+set @v_tiempo_key_min=(select MIN(id) from #list_tiempo_key);
+set @v_tiempo_key_max=(select MAX(id) from #list_tiempo_key);
+
+while (@v_tiempo_key_min<=@v_tiempo_key_max)
+begin
+
+set @v_tiempo_key_var =(select tiempo_key from #list_tiempo_key where id=@v_tiempo_key_min)
+
+select 'fact_ticket_trx' tipo_table,@v_tiempo_key_var, a.Tipo_Venta_Key,SUM(a.venta_neta)  venta_neta 
+from Fact_Ticket_Trx a
+inner join Dim_Local b
+on a.Local_Key=b.Local_Key
+where
+a.Tiempo_Key=@v_tiempo_key_var
+and b.Formato='JOKR'
+group by a.Tipo_Venta_Key;
+
+update a 
+set a.Tipo_Venta_Key=6
+from Fact_Ticket_Trx a
+inner join Dim_Local b
+on a.Local_Key=b.Local_Key
+where
+a.Tiempo_Key=@v_tiempo_key_var
+and b.Formato='JOKR'
+
+select 'fact_ticket_trx' tipo_table, @v_tiempo_key_var, a.Tipo_Venta_Key,SUM(a.venta_neta)  venta_neta 
+from Fact_Ticket_Trx a
+inner join Dim_Local b
+on a.Local_Key=b.Local_Key
+where
+a.Tiempo_Key=@v_tiempo_key_var
+and b.Formato='JOKR'
+group by a.Tipo_Venta_Key;
+
+-------------------------------------
+
+select 'fact_venta' tipo_table,@v_tiempo_key_var, a.Tipo_Venta_Key,SUM(a.venta_neta)  venta_neta 
+from fact_venta a
+inner join Dim_Local b
+on a.Local_Key=b.Local_Key
+where
+a.Tiempo_Key=@v_tiempo_key_var
+and b.Formato='JOKR'
+group by a.Tipo_Venta_Key;
+
+update a 
+set a.Tipo_Venta_Key=6
+from fact_venta a
+inner join Dim_Local b
+on a.Local_Key=b.Local_Key
+where
+a.Tiempo_Key=@v_tiempo_key_var
+and b.Formato='JOKR'
+
+select 'fact_venta' tipo_table, @v_tiempo_key_var, a.Tipo_Venta_Key,SUM(a.venta_neta)  venta_neta 
+from fact_venta a
+inner join Dim_Local b
+on a.Local_Key=b.Local_Key
+where
+a.Tiempo_Key=@v_tiempo_key_var
+and b.Formato='JOKR'
+group by a.Tipo_Venta_Key;
+
+set @v_tiempo_key_min=@v_tiempo_key_min+1
+end
+
+drop table #list_tiempo_key;
+
+--7184
+

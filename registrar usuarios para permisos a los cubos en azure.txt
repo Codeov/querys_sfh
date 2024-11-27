@@ -1,0 +1,7 @@
+$username = "admdatamartsp@intercorpretail.pe"
+$contraseña ="D4tXui7D/*-.5o0-\Q"
+$SecurePassword = ConvertTo-SecureString “$contraseña” -AsPlainText -Force
+$credenciales = New-Object System.Management.Automation.PSCredential($username,$SecurePassword)
+Login-AzAccount -Credential $credenciales
+
+Add-RoleMember -MemberName "creantis-boris.salazar@spsa.pe" -Server "asazure://aspaaseastus2.asazure.windows.net/spanlsrvprd01" -Database "SPSA_Cubo_Quiebre" -RoleName "Rol_Admin"

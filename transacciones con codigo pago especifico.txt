@@ -1,0 +1,2 @@
+select cast(a.pag_fcontable as date) fecha,a.hed_local local ,a.hed_pos caja ,a.hed_numtrx transaccion from trx_faltante_ctp a
+where a.pag_tipopago='39';

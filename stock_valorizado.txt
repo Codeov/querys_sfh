@@ -1,0 +1,79 @@
+
+
+begin
+
+declare @min integer
+declare @max integer
+declare @fecha as varchar(10)
+--declare @q_declare_acm as varchar(max)
+--declare @q_declare_inc as varchar(max)
+--declare @q_set_inc as varchar(max)
+declare @base_1_acm as varchar(max)
+declare @base_1_inc as varchar(max)
+declare @base_2_acm as varchar(max)
+declare @base_2_inc as varchar(max)
+
+declare @query as varchar(max)
+
+select row_number() over (order by a.fecha asc) id, a.fecha into #id_fecha from sv_fechas a
+
+set @min = (select min (a.id) from #id_fecha a)
+set @max = (select max (a.id) from #id_fecha a)
+
+--set @q_declare_acm=''
+set @base_2_acm=''
+set @base_1_acm=''
+
+while @min<= @max
+begin
+
+set @fecha = ((select a.fecha from #id_fecha a where a.id= @min))
+
+--set @q_declare_inc = (select 'declare @fecha_'+ @fecha+ ' as varchar(10) ')
+--set @q_set_inc = (select 'set @fecha_'+@fecha+'='+@fecha+' ')
+--set @q_declare_acm =@q_declare_acm+N'
+--'+@q_declare_inc+@q_set_inc;
+
+if @min=@max
+begin
+set @base_1_inc= N'isnull(['+@fecha+N'],0) as '+N''''+@fecha+N''''
+set @base_2_inc=N'['+@fecha+N']'
+end
+else
+begin
+set @base_1_inc= N'isnull(['+@fecha+N'],0) as '+N''''+@fecha+N''''+','
+set @base_2_inc=N'['+@fecha+N']'+','
+end
+set @base_1_acm=@base_1_acm+@base_1_inc
+set @base_2_acm=@base_2_acm+@base_2_inc
+
+
+set @min= @min+1
+end
+
+set @query= N'SELECT formato,nombre_division,nombre_area,nombre_seccion,nombre_linea,nombre_tipo_marca,codigo_linea,'+N'
+'+@base_1_acm+N'
+'+N'FROM  
+(
+  select b.formato,c.nombre_division,c.nombre_area,c.nombre_seccion,c.nombre_linea,c.nombre_tipo_marca,codigo_linea,a.fecha,sum(a.stock_valorizado) stock_valorizado from fact_planificacion a 
+ inner join dim_local b 
+ on a.id_local=b.id_local
+ inner join dim_producto c 
+ on a.id_producto=c.id_producto
+ inner join sv_fechas d
+ on a.fecha=d.fecha
+ --where  b.codigo_local= ''P195''
+ group by b.formato,c.nombre_division,c.nombre_area,c.nombre_seccion,c.nombre_linea,c.nombre_tipo_marca,codigo_linea,a.fecha
+) AS a  
+PIVOT  
+(  
+  sum(stock_valorizado)
+  FOR fecha IN ('+@base_2_acm+N'
+  '+N')  
+) AS PivotTable
+order by 1'
+
+print(@query)
+exec(@query)
+drop table #id_fecha
+end

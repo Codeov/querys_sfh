@@ -1,0 +1,87 @@
+with fp (fecha,Codigo_Alterno,Numero_Terminal,Numero_Transaccion,Codigo_Tipo_Medio_Pago,importe_bruto_det,importe_bruto_tot,part)
+as(
+		select cast(a.fecha as date) fecha,a.Codigo_Alterno,a.Numero_Terminal,
+		a.Numero_Transaccion,b.Codigo_Tipo_Medio_Pago,b.Importe_Pago_Bruto importe_bruto_det,a.importe_bruto importe_bruto_tot,cast(round(b.Importe_Pago_Bruto/a.importe_bruto,5,1) as float) part
+		from 
+				(select b.Fecha,c.Codigo_Alterno,d.Numero_Terminal,e.Numero_Transaccion,
+				sum(a.Importe_Pago_Bruto) importe_bruto
+				from Fact_Forma_Pago_Trx a
+				inner join dim_tiempo b 
+				on a.Tiempo_Key=b.Tiempo_Key
+				inner join dim_local c 
+				on a.Local_Key=c.Local_Key
+				inner join Dim_Terminal d
+				on a.Terminal_Key= d.Terminal_Key
+				inner join Dim_Numero_Transaccion e
+				on a.Numero_Transaccion_Key=e.Numero_Transaccion_Key
+				inner join Dim_Medio_Pago f
+				on a.Medio_Pago_Key=f.Medio_Pago_Key
+				where b.fecha between '2022-08-01' and '2022-10-31'  and 
+				c.Codigo_SAP= 'P195' --and
+				--d.Numero_Terminal= 4 
+				group by b.Fecha,c.Codigo_Alterno,d.Numero_Terminal,e.Numero_Transaccion)a
+		inner join
+		(select b.Fecha,c.Codigo_Alterno,d.Numero_Terminal,e.Numero_Transaccion,f.Codigo_Tipo_Medio_Pago,a.Importe_Pago_Bruto--,
+				from Fact_Forma_Pago_Trx a
+				inner join dim_tiempo b 
+				on a.Tiempo_Key=b.Tiempo_Key
+				inner join dim_local c 
+				on a.Local_Key=c.Local_Key
+				inner join Dim_Terminal d
+				on a.Terminal_Key= d.Terminal_Key
+				inner join Dim_Numero_Transaccion e
+				on a.Numero_Transaccion_Key=e.Numero_Transaccion_Key
+				inner join Dim_Medio_Pago f
+				on a.Medio_Pago_Key=f.Medio_Pago_Key
+				where b.fecha between '2022-08-01' and '2022-10-31' and 
+				c.Codigo_SAP= 'P195' --and
+				--d.Numero_Terminal= 4
+				) b 
+		on a.fecha= b.fecha and a.Codigo_Alterno=b.Codigo_Alterno and a.Numero_Terminal=b.Numero_Terminal and a.Numero_Transaccion=b.Numero_Transaccion
+		--order by 3,4
+)
+
+select p.fecha,p.Codigo_Alterno,p.Numero_Terminal,p.Numero_Transaccion,p.Codigo_Tipo_Medio_Pago,p.part,p.importe_bruto_det,
+(p.part*q.venta_neta) venta_neta,(p.part*q.venta_bruta) venta_bruta
+into #fp from fp p
+inner join (
+select b.Fecha,c.Codigo_Alterno,d.Numero_Terminal,e.Numero_Transaccion,sum(a.Venta_Neta) venta_neta,sum(a.Venta_Bruta) venta_bruta
+		,count(distinct(a.Id_Ticket))cantidad_trx
+		from Fact_Ticket_Trx a 
+		inner join dim_tiempo b 
+		on a.Tiempo_Key=b.Tiempo_Key
+		inner join dim_local c 
+		on a.Local_Key=c.Local_Key
+		inner join Dim_Terminal d
+		on a.Terminal_Key= d.Terminal_Key
+		inner join Dim_Numero_Transaccion e
+		on a.Numero_Transaccion_Key=e.Numero_Transaccion_Key
+		where b.fecha between '2022-08-01' and '2022-10-31'  and 
+		c.Codigo_SAP= 'P195'
+		group by b.Fecha,c.Codigo_Alterno,d.Numero_Terminal,e.Numero_Transaccion
+) q
+on p.fecha=q.Fecha and p.Codigo_Alterno=q.Codigo_Alterno and p.Numero_Terminal=q.Numero_Terminal and p.Numero_Transaccion=q.Numero_Transaccion
+order by 3,4,6;
+
+select a.*,row_number() over (partition by a.fecha,a.codigo_alterno,a.numero_terminal,a.numero_transaccion order by a.numero_terminal,a.numero_transaccion) flag 
+into #fpc from #fp a
+where a.codigo_tipo_medio_pago in
+(8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 32, 50, 85, 86, 88, 89, 94, 95, 96, 98, 99)
+order by a.numero_terminal,a.numero_transaccion;
+
+select  a.fecha,a.Codigo_Alterno,sum(b.venta_neta) venta_neta,count(a.cantidad_trx) cantidad_trx from (select a.fecha,a.codigo_alterno,a.numero_terminal,a.numero_transaccion,count(1) cantidad_trx from #fpc a
+where a.flag =1
+group by  a.fecha,a.codigo_alterno,a.numero_terminal,a.numero_transaccion) a
+inner join 
+( select * from #fpc
+) b
+on a.fecha=b.fecha and a.Codigo_Alterno=b.Codigo_Alterno and a.Numero_Terminal=b.Numero_Terminal and a.Numero_Transaccion=b.Numero_Transaccion
+group by a.fecha,a.Codigo_Alterno
+order by 3 desc
+;
+
+--drop table #fp
+--drop table #fpc
+
+
+

@@ -1,0 +1,28 @@
+  select g.formato,sum(f.venta_neta) venta_neta,sum(f.trx_venta) trx_venta,sum(f.venta_ncr) venta_ncr,sum(f.trx_ncr) trx_ncr,(sum(f.venta_ncr*-1)/sum(f.venta_neta)) part_ncr_venta
+  ,(sum(f.trx_ncr)/sum(f.trx_venta)) part_ncr_trx
+  from (
+  select a.codigo_local, sum(a.venta_neta) venta_neta,sum(a.trx_venta)trx_venta,sum(venta_ncr) venta_ncr,sum(trx_ncr) trx_ncr from (  
+     SELECT a.codigo_local,sum(a.venta_neta) venta_neta,0 trx_venta, 0 venta_ncr, 0 trx_ncr FROM `sistemas-bi.SPSA.ticket_venta` a 
+    where a.fecha between '2023-01-01' and '2023-03-31'
+    group by a.codigo_local
+    union all
+     SELECT a.codigo_local,sum(a.venta_neta) venta_neta,count(a.id_ticket) trx_venta, 0 venta_ncr, 0 trx_ncr FROM `sistemas-bi.SPSA.ticket_venta` a 
+    where a.fecha between '2023-01-01' and '2023-03-31'
+    group by a.codigo_local
+    union all
+    SELECT a.codigo_local,0 venta_neta,0 trx_venta, sum(a.venta_neta) venta_ncr, 0 trx_ncr FROM `sistemas-bi.SPSA.ticket_venta` a 
+    where a.fecha between '2023-01-01' and '2023-03-31'
+    and a.codigo_tipo_doc_trx = 'NCR' 
+    group by a.codigo_local
+    union all
+    SELECT a.codigo_local,0 venta_neta,0 trx_venta,0 venta_ncr,count(a.id_ticket) trx_ncr FROM `sistemas-bi.SPSA.ticket_venta` a 
+    where a.fecha between '2023-01-01' and '2023-03-31'
+    and a.codigo_tipo_doc_trx = 'NCR'
+    group by a.codigo_local
+    ) a
+    group by  a.codigo_local ) f 
+    inner join `sistemas-bi.SPSA.dim_local` g
+    on f.codigo_local = g.codigo_local
+    where g.formato in ('PLAZA VEA','PLAZA VEA EXPRESS','PLAZA VEA SUPER','VIVANDA','CASH & CARRY','MASS')
+    group by g.formato
+    ;

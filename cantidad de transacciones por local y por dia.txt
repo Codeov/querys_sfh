@@ -1,0 +1,79 @@
+Select
+
+
+
+anio,
+
+nombre_mes,
+
+codigo_local,
+
+nombre,
+
+sum(venta) venta,
+
+sum(cnt_ticket) cnt_ticket
+
+
+
+ from (
+        
+        select
+        
+         b.anio_comercial anio,
+          
+          b.nombre_mes,
+          
+          a.codigo_local,
+          
+          c.nombre,
+          
+          sum(venta_neta) venta,
+          
+          0 cnt_ticket
+        
+          from sistemas - bi.SPSA.ticket_venta a
+        
+         inner join sistemas - bi.SPSA.dim_tiempo b on a.fecha = b.fecha
+        
+         inner join sistemas - bi.SPSA.dim_local c on a.codigo_local =
+                                                      c.codigo_local
+        
+         where a.fecha between '2022-01-01' and '2022-10-25'
+        
+         group by 1, 2, 3, 4
+        
+        union all
+        
+        select
+        
+         b.anio_comercial anio,
+         
+         b.nombre_mes,
+         
+         a.codigo_local,
+         
+         c.nombre,
+         
+         0.0 venta,
+         
+         count(distinct id_ticket) cnt_ticket
+        
+          from sistemas - bi.SPSA.ticket_venta a
+        
+         inner join sistemas - bi.SPSA.dim_tiempo b on a.fecha = b.fecha
+        
+         inner join sistemas - bi.SPSA.dim_local c on a.codigo_local =
+                                                      c.codigo_local
+        
+         where a.fecha between '2022-01-01' and '2022-10-25'
+              
+           and codigo_tipo_venta = 1
+        
+         group by 1, 2, 3, 4
+        
+        ) as tb
+
+
+
+group by 1, 2, 3, 4
